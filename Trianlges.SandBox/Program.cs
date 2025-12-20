@@ -1,4 +1,4 @@
-﻿using GLFW;
+﻿using Trianlges.Renderer;
 
 namespace Trianlges.SandBox;
 
@@ -6,15 +6,9 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        var window = Glfw.CreateWindow(1280, 720, "GLFW", default, default);
-        
-        while (!Glfw.WindowShouldClose(window))
-        {
+        using var window = new Window(800, 600, "Sandbox 0.0.1.1");
 
-            
-            Glfw.PollEvents();
-        }
-        
-        Glfw.DestroyWindow(window);
+        var app = new Application(window, args);
+        app.Run();
     }
 }
