@@ -1,6 +1,8 @@
-﻿using GLFW;
+﻿using System.Runtime.InteropServices;
+using GLFW;
+using Trianlges.Render.Graphics.Direct3D11;
 
-namespace Trianlges.Renderer;
+namespace Trianlges.Render;
 
 public class Application
 {
@@ -17,9 +19,17 @@ public class Application
     {
         Initializer();
         
+        var d3dDevice = new D3DDevice();
+        
+        d3dDevice.Create(_window.Win32Handler);
+        d3dDevice.CreateRenderResouce();
+        
+        var renderer = new Renderer(d3dDevice);
+        
         while (!Glfw.WindowShouldClose(_window))
         {
-
+            renderer.Render();
+            d3dDevice.Present();
             
             Glfw.PollEvents();
         }
@@ -27,6 +37,6 @@ public class Application
 
     private void Initializer()
     {
-        
+
     }
 }
