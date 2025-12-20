@@ -1,4 +1,4 @@
-﻿using Trianlges.Renderer;
+﻿using Trianlges.Render;
 
 namespace Trianlges.SandBox;
 

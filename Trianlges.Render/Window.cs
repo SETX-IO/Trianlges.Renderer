@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Runtime.Versioning;
 using GLFW;
 
-namespace Trianlges.Renderer;
+namespace Trianlges.Render;
 
 public class Window : IDisposable
 {
@@ -42,6 +42,9 @@ public class Window : IDisposable
         }
     }
 
+    /// <summary>
+    /// Window's HWND.
+    /// </summary>
     [SupportedOSPlatform("Windows")]
     public IntPtr Win32Handler {
         get
@@ -57,6 +60,12 @@ public class Window : IDisposable
 
     public static implicit operator GLFW.Window(Window window) => window._window;
 
+    /// <summary>
+    /// Create Window.
+    /// </summary>
+    /// <param name="width">width</param>
+    /// <param name="height">height</param>
+    /// <param name="title">title</param>
     public Window(int width, int height, string title)
     {
         _window = Glfw.CreateWindow(width, height, title, default, default);
