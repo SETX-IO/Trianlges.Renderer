@@ -6,6 +6,9 @@ using Vortice.Mathematics;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
 
+/// <summary>
+/// Marager DirectX11 Device.
+/// </summary>
 public class D3DDevice
 {
     private ID3D11Texture2D? _backBuffer;

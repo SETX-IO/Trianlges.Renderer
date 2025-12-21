@@ -25,10 +25,16 @@ public class Application
         d3dDevice.CreateRenderResouce();
         
         var renderer = new Renderer(d3dDevice);
+
+        var trianlgeModule = Module.Trianlge;
+        renderer.AddDrawElement(trianlgeModule);
         
         while (!Glfw.WindowShouldClose(_window))
         {
             renderer.Render();
+            
+            // trianlgeModule.Render(d3dDevice);
+            
             d3dDevice.Present();
             
             Glfw.PollEvents();
