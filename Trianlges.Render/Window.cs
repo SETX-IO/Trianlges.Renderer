@@ -11,6 +11,8 @@ public class Window : IDisposable
     private string _title;
     private Size _size;
     [SupportedOSPlatform("Windows")] private IntPtr _win32Handler;
+
+    public static float AspectRatio;
     
     /// <summary>
     /// Window's title.
@@ -42,6 +44,8 @@ public class Window : IDisposable
         }
     }
 
+    public bool IsClose => Glfw.WindowShouldClose(_window);
+
     /// <summary>
     /// Window's HWND.
     /// </summary>
@@ -58,8 +62,6 @@ public class Window : IDisposable
         }
     }
 
-    public static implicit operator GLFW.Window(Window window) => window._window;
-
     /// <summary>
     /// Create Window.
     /// </summary>
@@ -71,7 +73,10 @@ public class Window : IDisposable
         _window = Glfw.CreateWindow(width, height, title, default, default);
         _title = title;
         _size = new Size(width, height);
+        AspectRatio = (float)width / height;
     }
+
+    public void DispatchMessage() => Glfw.PollEvents();
     
     public void Dispose()
     {

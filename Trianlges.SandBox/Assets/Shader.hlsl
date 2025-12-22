@@ -1,3 +1,8 @@
+cbuffer ModuleViewProj : register(b0)
+{
+    matrix mvp;
+}
+
 struct Attributes
 {
     float3 position : POSITION;
@@ -14,7 +19,9 @@ Varyings vert(Attributes In)
 {
     Varyings Out;
     
-    Out.position = float4(In.position, 1.0f);
+    Out.position = float4(In.position, 1);
+    Out.position = mul(Out.position, mvp);
+    
     Out.color = float4(In.color, 1.0f);
     
     return Out;
@@ -22,6 +29,5 @@ Varyings vert(Attributes In)
 
 float4 frag(Varyings In) : SV_Target
 {
-    // return float4(0, 0.3f, 0.1f, 1);
     return In.color;
 }
