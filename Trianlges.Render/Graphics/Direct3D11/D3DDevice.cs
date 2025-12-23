@@ -8,47 +8,47 @@ using Vortice.Mathematics;
 namespace Trianlges.Render.Graphics.Direct3D11;
 
 /// <summary>
-/// Marager DirectX11 Device.
+///     Marager DirectX11 Device.
 /// </summary>
 public class D3DDevice
 {
-    private ID3D11Texture2D? _backBuffer;
-    private ID3D11Texture2D? _depthBuffer;
     private Viewport _viewport;
-    
-    public ID3D11Device Device { get; private set; }
-    public ID3D11DeviceContext DContext { get; private set; }
-    
-    public IDXGISwapChain SwapChain { get; private set; }
-    public ID3D11RenderTargetView? RenderTarget { get; private set; }
-    public ID3D11DepthStencilView? DepthStencil { get; private set; }
 
     /// <summary>
-    /// Default constructors.
+    ///     Default constructors.
     /// </summary>
     /// <code>
     /// // You or use Code.
     /// // windowHandler is win32 HWND.
     /// Create(windowHandler);
-    /// CreateRenderResouce();
+    /// ConfigRenderTarget();
     /// </code>
-    public D3DDevice() {}
-    
+    public D3DDevice()
+    {
+    }
+
     /// <summary>
-    /// Create constructors.
+    ///     Create constructors.
     /// </summary>
     /// <code>
     /// // You or use Code.
     /// // windowHandler is win32 HWND.
     /// Create(windowHandler);
-    /// CreateRenderResouce();
+    /// ConfigRenderTarget();
     /// </code>
     /// <param name="windowHandler">Win32 HWND</param>
     public D3DDevice(IntPtr windowHandler)
     {
         Create(windowHandler);
-        CreateRenderResouce();
+        ConfigRenderTarget();
     }
+
+    public ID3D11Device Device { get; private set; } = null!;
+    public ID3D11DeviceContext DContext { get; private set; } = null!;
+
+    public IDXGISwapChain SwapChain { get; private set; } = null!;
+    public ID3D11RenderTargetView? RenderTarget { get; private set; }
+    public ID3D11DepthStencilView? DepthStencil { get; private set; }
 
     public void Create(IntPtr windowHandler)
     {
@@ -57,65 +57,69 @@ public class D3DDevice
             BufferCount = 1,
             BufferDescription = new ModeDescription
             {
-                Format = Format.R8G8B8A8_UNorm,
+                Format = Format.R8G8B8A8_UNorm
             },
             BufferUsage = Usage.RenderTargetOutput,
             OutputWindow = windowHandler,
-            SampleDescription = new SampleDescription
-            {
-                Count = 1,
-                Quality = 0
-            },
+            SampleDescription = new SampleDescription(1, 0),
             Windowed = true
         };
 
+        var createFlags = DeviceCreationFlags.None;
+
+#if DEBUG
+        createFlags |= DeviceCreationFlags.Debug;
+#endif
+        
         D3D11.D3D11CreateDeviceAndSwapChain(
             null, DriverType.Hardware,
-            default, null!,
+            createFlags, null!,
             swDesc, out var sw,
             out var device, out _,
             out var context).CheckError();
 
         if (device == null && context == null && sw == null)
             throw new COMException();
-        
+
         Device = device!;
         DContext = context!;
         SwapChain = sw!;
     }
-
-    public void CreateRenderResouce()
+    
+    public void ResetSize(uint width, uint hieght)
     {
-         _backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
-         RenderTarget = Device.CreateRenderTargetView(_backBuffer);
-         var bbDesc = _backBuffer.Description;
+        if (width == 0 || hieght == 0) return;
+        
+        SwapChain.ResizeBuffers(1, width, hieght);
+        RenderTarget?.Release();
+        DepthStencil?.Release();
+        
+        
+        ConfigRenderTarget();
+    }
 
-         var depthDesc = new Texture2DDescription(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1, BindFlags.DepthStencil);
-         var depthViewDesc = new DepthStencilViewDescription(DepthStencilViewDimension.Texture2D);
+    public void ConfigRenderTarget()
+    {
+        var backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
+        RenderTarget = Device.CreateRenderTargetView(backBuffer);
+        var bbDesc = backBuffer.Description;
 
-         _depthBuffer = Device.CreateTexture2D(depthDesc);
-         DepthStencil = Device.CreateDepthStencilView(_depthBuffer, depthViewDesc);
-         
-         _viewport = new Viewport
-         {
-            Width = bbDesc.Width,
-            Height = bbDesc.Height,
-            MaxDepth = 1f,
-            MinDepth = 0f
-         };
-         
-         DContext.OMSetRenderTargets([RenderTarget]);
-         DContext.RSSetViewports([_viewport]);
+        var depthDesc = new Texture2DDescription(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1,
+            BindFlags.DepthStencil);
+        var depthViewDesc = new DepthStencilViewDescription(DepthStencilViewDimension.Texture2D);
+
+        var depthBuffer = Device.CreateTexture2D(depthDesc);
+        DepthStencil = Device.CreateDepthStencilView(depthBuffer, depthViewDesc);
+
+        DContext.OMSetRenderTargets([RenderTarget]);
+
+        _viewport = new Viewport(0, 0, bbDesc.Width, bbDesc.Height, 0, 1);
+        
+        DContext.RSSetViewports([_viewport]);
     }
 
     public void Present()
     {
         SwapChain.Present(0, PresentFlags.None);
-    }
-    
-    public void Release()
-    {
-        Device.Release();
-        DContext.Release();
     }
 }

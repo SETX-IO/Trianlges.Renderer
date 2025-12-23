@@ -8,6 +8,9 @@ Ti is use DirectX3D or Vulkan or OpenGl Build's Render engine.
 -[x] Renderer solidcolor window.
 -[x] Draw three color tranlge.
 
+## using Tools
+[RenderDoc](https://renderdoc.org/) D3D11 Debug tool.
+
 ## using Nuget
 
 [GLFW.NET.Natives](https://www.nuget.org/packages/GLFW.NET.Natives) Create Window.

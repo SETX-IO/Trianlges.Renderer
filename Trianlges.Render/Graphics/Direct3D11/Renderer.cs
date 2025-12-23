@@ -1,54 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Numerics;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Vortice.Direct3D11;
-using Vortice.Mathematics;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
 
 public class Renderer : IRenderer
 {
+    public readonly Camera Camera;
     private readonly D3DDevice _device;
     private readonly List<DrawElement> _drawElements;
-    
-    private readonly Camera _camera;
 
     private ID3D11Buffer? _contextBuffer;
-    
+    private ConstantBufferData _constantData;
+
+    private float _index;
+
     public Renderer(D3DDevice device)
     {
         _device = device;
         _drawElements = [];
-        
-        _camera = new Camera(new Vector3(0, 0, -1.5f), 45);
+
+        Camera = new Camera(new Vector3(0, 0, -2));
+        _constantData = new ConstantBufferData(Matrix4x4.Identity, Camera.View, Camera.Proj);
     }
 
-    public void AddDrawElement(DrawElement? element)
-    {
-        if (element == null) return;
-        
-        _drawElements.Add(element);
-    }
-    
-    private float _index;
-    
-    public void Updata()
+    public unsafe void Updata()
     {
         if (_contextBuffer == null)
         {
-            var cBufferDesc = new BufferDescription(ConstantBufferData.Size, BindFlags.ConstantBuffer);
+            var cBufferDesc = new BufferDescription(ConstantBufferData.Size, BindFlags.ConstantBuffer, ResourceUsage.Dynamic, CpuAccessFlags.Write);
             _contextBuffer = _device.Device.CreateBuffer(cBufferDesc);
+            
+            _device.DContext.VSSetConstantBuffers(0, [_contextBuffer]);
         }
-        
+
         _index += 0.0005f;
         var rotation = Matrix4x4.CreateRotationY(_index);
-        var rotation1 = Matrix4x4.CreateRotationX(_index);
-        // var translation = Matrix4x4.CreateTranslation(MathF.Sin(_index) * 12, 0, MathF.Cos(_index) * 25);
         var translation = Matrix4x4.CreateTranslation(0, 0, 2);
-
-        // _camera.Position = new Vector3(MathF.Sin(_index) * 12, 0, MathF.Cos(_index) * 25);
-        var data = new ConstantBufferData(_camera.Proj * _camera.View * translation);
+        var scale = Matrix4x4.CreateScale(0.4f);
         
-        _device.DContext.UpdateSubresource([data], _contextBuffer);
+        // SRT矩阵传入前需要进行转置.
+        _constantData.Module = Matrix4x4.Transpose(rotation * translation);
+        
+        var map = _device.DContext.Map(_contextBuffer, MapMode.WriteDiscard);
+        Unsafe.Copy(map.DataPointer.ToPointer(), ref _constantData);
+        _device.DContext.Unmap(_contextBuffer);
     }
 
     public void Render()
@@ -56,22 +54,18 @@ public class Renderer : IRenderer
         var renderTarget = _device.RenderTarget;
         var depthStencil = _device.DepthStencil;
         var context = _device.DContext;
-
-        var clearColor = new Color(0, 50, 100);
-        context.ClearRenderTargetView(renderTarget, clearColor);
-        context.ClearDepthStencilView(depthStencil, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f, 0);
         
-        context.VSSetConstantBuffers(0, [_contextBuffer]);
+        context.ClearRenderTargetView(renderTarget, Camera.ClearColor);
+        context.ClearDepthStencilView(depthStencil, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f,
+            0);
         
         _drawElements.ForEach(drawElement => drawElement.Render(_device));
     }
 
-    public void Release()
+    public void AddDrawElement(DrawElement? element)
     {
-        _device.Release();
+        if (element == null) return;
 
-        _drawElements.ForEach(drawElement => drawElement.Release());
-        
-        _drawElements.Clear();
+        _drawElements.Add(element);
     }
 }

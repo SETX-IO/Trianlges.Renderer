@@ -2,27 +2,36 @@
 
 public abstract class Application
 {
-    protected readonly Window _window;
-    protected string[] _args;
+    private readonly string[] _args;
+    protected readonly Window MainWindow;
 
-    public Application(Window window, string[] args)
+    protected Application(Window mainWindow, string[] args)
     {
-        _window = window;
+        MainWindow = mainWindow;
         _args = args;
     }
-    
+
     public void Run()
     {
-        Initializer();
-        
-        while (!_window.IsClose)
+        Initializer(_args);
+
+        while (!MainWindow.IsClose)
         {
             Render();
-            
-            _window.DispatchMessage();
+
+            MainWindow.DispatchMessage();
         }
+
+        OnExit();
     }
 
-    protected abstract void Initializer();
-    protected abstract void Render();
+    protected abstract void Initializer(string[] args);
+
+    protected virtual void Render()
+    {
+    }
+
+    protected virtual void OnExit()
+    {
+    }
 }

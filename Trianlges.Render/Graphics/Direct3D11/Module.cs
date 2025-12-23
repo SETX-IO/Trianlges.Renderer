@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Vortice;
-using Vortice.Direct3D11;
 using Vortice.D3DCompiler;
+using Vortice.Direct3D11;
 using Vortice.DXGI;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
@@ -9,84 +9,95 @@ namespace Trianlges.Render.Graphics.Direct3D11;
 public class Module : DrawElement
 {
     public static readonly Module Trianlge;
+    public static readonly Module Quadrilateral;
     public static readonly Module Cube;
+    
+    private uint[] _indiecs = [];
 
     private Vertex[] _vertices = null!;
-    private uint[]? _indiecs;
-    
+
     static Module()
     {
         Trianlge = new Module();
+        Quadrilateral = new Module();
         Cube = new Module();
 
         Vertex[] vertices =
         [
-            new Vertex(new Vector3(0, 0.5f, 0), Vector3.UnitX),
-            new Vertex(new Vector3(0.5f, -0.5f, 0), Vector3.UnitY),
-            new Vertex(new Vector3(-0.5f, -0.5f, 0), Vector3.UnitZ)
+            new(new Vector3(0, 0.5f, 0), Vector3.UnitX),
+            new(new Vector3(0.5f, -0.5f, 0), Vector3.UnitY),
+            new(new Vector3(-0.5f, -0.5f, 0), Vector3.UnitZ)
         ];
 
-        uint[] indiecs = [ 2,1,0 ];
-
+        uint[] indiecs = [0,1,2];
+        
         Trianlge.Init(vertices, indiecs);
+
+        vertices =
+        [
+            new(new Vector3(-0.5f, 0.5f, 0), Vector3.UnitX),
+            new(new Vector3(0.5f, 0.5f, 0), Vector3.UnitY),
+            new(new Vector3(0.5f, -0.5f, 0), Vector3.UnitZ),
+            new(new Vector3(-0.5f, -0.5f, 0), new Vector3(1,1,0))
+        ];
+
+        indiecs = [0,1,2,   2,3,0];
+        
+        Quadrilateral.Init(vertices, indiecs);
         
         vertices =
-        [ 
-            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), new Vector3(0.0f, 0.0f, 0.0f)), 
-            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(1.0f, 0.0f, 0.0f)), 
-            new Vertex(new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, 1.0f, 0.0f)), 
-            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), new Vector3(0.0f, 1.0f, 0.0f)), 
-            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)), 
-            new Vertex(new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(1.0f, 0.0f, 1.0f)), 
-            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f)), 
+        [
+            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), new Vector3(0.0f, 0.0f, 0.0f)),
+            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(1.0f, 0.0f, 0.0f)),
+            new Vertex(new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, 1.0f, 0.0f)),
+            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), new Vector3(0.0f, 1.0f, 0.0f)),
+            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)),
+            new Vertex(new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(1.0f, 0.0f, 1.0f)),
+            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f)),
             new Vertex(new Vector3(1.0f, -1.0f, 1.0f), new Vector3(0.0f, 1.0f, 1.0f))
         ];
 
         indiecs =
         [
             // 正面
-            0, 1, 2,
-            2, 3, 0,
+            0, 1, 2,    2, 3, 0,
             // 左面
-            4, 5, 1,
-            1, 0, 4,
+            4, 5, 1,    1, 0, 4,
             // 顶面
-            1, 5, 6,
-            6, 2, 1,
+            1, 5, 6,    6, 2, 1,
             // 背面
-            7, 6, 5,
-            5, 4, 7,
+            7, 6, 5,    5, 4, 7,
             // 右面
-            3, 2, 6,
-            6, 7, 3,
+            3, 2, 6,    6, 7, 3,
             // 底面
-            4, 0, 3,
-            3, 7, 4
+            4, 0, 3,    3, 7, 4
         ];
-        
+
         Cube.Init(vertices, indiecs);
     }
 
-    public void Init(Vertex[] vertices, uint[]? indiecs = null)
+    public void Init(Vertex[] vertices, uint[] indiecs)
     {
         _vertices = vertices;
         _indiecs = indiecs;
     }
 
-    public void CreateRenderResouces(ID3D11Device device)
+    private void CreateRenderResouces(ID3D11Device device)
     {
         var vBufferDesc =
-            new BufferDescription((uint)(_vertices.Length * Vertex.Size), BindFlags.VertexBuffer, ResourceUsage.Immutable);
+            new BufferDescription((uint)(_vertices.Length * Vertex.Size), BindFlags.VertexBuffer,
+                ResourceUsage.Immutable);
 
         var vData = DataStream.Create(_vertices, true, true);
         _vBuffer = device.CreateBuffer(vBufferDesc, vData);
 
-        if (_indiecs is { Length: 0 })
+        if (_indiecs is not { Length: 0 })
         {
             var iBufferDesc =
-                new BufferDescription((uint)(_vertices.Length * sizeof(uint)), BindFlags.IndexBuffer, ResourceUsage.Immutable);
+                new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
+                    ResourceUsage.Immutable);
 
-            var iData = DataStream.Create(_vertices, true, true);
+            var iData = DataStream.Create(_indiecs, true, true);
             _iBuffer = device.CreateBuffer(iBufferDesc, iData);
         }
 
@@ -95,10 +106,10 @@ public class Module : DrawElement
 
         InputElementDescription[] inputDesc =
         [
-            new InputElementDescription("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new InputElementDescription("COLOR", 0, Format.R32G32B32_Float, 12, 0),
+            new("POSITION", 0, Format.R32G32B32_Float, 0, 0),
+            new("COLOR", 0, Format.R32G32B32_Float, 12, 0)
         ];
-         
+
         _vShader = device.CreateVertexShader(vShaderCode.Span);
         _pShader = device.CreatePixelShader(pShaderCode.Span);
 
@@ -108,18 +119,15 @@ public class Module : DrawElement
     public override void Render(D3DDevice device)
     {
         var context = device.DContext;
-        
+
         if (_vShader == null && _pShader == null)
             CreateRenderResouces(device.Device);
-        
+
         base.Render(device);
+        
         if (_iBuffer == null)
-        {
             context.Draw((uint)_vertices.Length, 0);
-        }
         else
-        {
             context.DrawIndexed((uint)_indiecs.Length, 0, 0);
-        }
     }
 }

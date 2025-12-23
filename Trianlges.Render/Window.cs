@@ -7,15 +7,14 @@ namespace Trianlges.Render;
 
 public class Window : IDisposable
 {
-    private readonly GLFW.Window _window;
-    private string _title;
-    private Size _size;
-    [SupportedOSPlatform("Windows")] private IntPtr _win32Handler;
-
     public static float AspectRatio;
+    private readonly GLFW.Window _window;
+    private Size _size;
+    private string _title;
+    [SupportedOSPlatform("Windows")] private IntPtr _win32Handler;
     
     /// <summary>
-    /// Window's title.
+    ///     Window's title.
     /// </summary>
     public string Title
     {
@@ -28,9 +27,9 @@ public class Window : IDisposable
             Glfw.SetWindowTitle(_window, value);
         }
     }
-    
+
     /// <summary>
-    /// Window's size.
+    ///     Window's size.
     /// </summary>
     public Size Size
     {
@@ -40,6 +39,7 @@ public class Window : IDisposable
             if (Equals(value, Size)) return;
 
             _size = value;
+            AspectRatio = (float)value.Width/ value.Height;
             Glfw.SetWindowSize(_window, value.Width, value.Height);
         }
     }
@@ -47,23 +47,39 @@ public class Window : IDisposable
     public bool IsClose => Glfw.WindowShouldClose(_window);
 
     /// <summary>
-    /// Window's HWND.
+    ///     Window's HWND.
     /// </summary>
     [SupportedOSPlatform("Windows")]
-    public IntPtr Win32Handler {
+    public IntPtr Win32Handler
+    {
         get
         {
-            if (_win32Handler == IntPtr.Zero)
-            {
-                _win32Handler = Native.GetWin32Window(_window);
-            }
+            if (_win32Handler == IntPtr.Zero) _win32Handler = Native.GetWin32Window(_window);
 
             return _win32Handler;
         }
     }
 
+    private SizeCallback? _changeSizeCallBack;
+    public event SizeCallback? ChangeSize
+    {
+        add
+        {
+            if (value == null) return;
+            
+            _changeSizeCallBack = value;
+            Glfw.SetFramebufferSizeCallback(_window, _changeSizeCallBack);
+        }
+        remove
+        {
+            if (value == _changeSizeCallBack)
+                _changeSizeCallBack = null;
+            Glfw.SetFramebufferSizeCallback(_window, _changeSizeCallBack);
+        }
+    }
+        
     /// <summary>
-    /// Create Window.
+    ///     Create Window.
     /// </summary>
     /// <param name="width">width</param>
     /// <param name="height">height</param>
@@ -75,11 +91,7 @@ public class Window : IDisposable
         _size = new Size(width, height);
         AspectRatio = (float)width / height;
     }
-
-    public void DispatchMessage() => Glfw.PollEvents();
     
-    public void Dispose()
-    {
-        Glfw.DestroyWindow(_window);
-    }
+    public void DispatchMessage() => Glfw.PollEvents();
+    public void Dispose() => Glfw.DestroyWindow(_window);
 }

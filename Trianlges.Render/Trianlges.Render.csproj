@@ -9,9 +9,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="GLFW.NET.Natives" Version="1.0.1" />
-      <PackageReference Include="Vortice.D3DCompiler" Version="3.6.2" />
-      <PackageReference Include="Vortice.Direct3D11" Version="3.6.2" />
+        <PackageReference Include="GLFW.NET.Natives" Version="1.0.1"/>
+        <PackageReference Include="Vortice.D3DCompiler" Version="3.6.2"/>
+        <PackageReference Include="Vortice.Direct3D11" Version="3.6.2"/>
     </ItemGroup>
 
 </Project>
