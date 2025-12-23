@@ -1,4 +1,4 @@
 <Solution>
-    <Project Path="Trianlges.Render/Trianlges.Render.csproj"/>
-    <Project Path="Trianlges.SandBox/Trianlges.SandBox.csproj"/>
+    <Project Path="src/Trianlges.Render/Trianlges.Render.csproj"/>
+    <Project Path="src/Trianlges.SandBox/Trianlges.SandBox.csproj"/>
 </Solution>
