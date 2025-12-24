@@ -8,22 +8,31 @@ public class GameApp : Application
 {
     private readonly D3DDevice _device = new();
     private readonly IRenderer _renderer;
+    private readonly IRenderer _d2DRenderer;
 
     public GameApp(Window mainWindow, string[] args) : base(mainWindow, args)
     {
-        _renderer = new Renderer(_device);
+        _device = new D3DDevice(MainWindow.Win32Handler);
+        
+        _renderer = new Graphics.Direct3D11.Renderer(_device);
+
+        var d2dRender = new Graphics.Direct2D.Renderer(_device);
+        d2dRender.Init();
+        
+        _d2DRenderer = d2dRender;
     }
 
     protected override void Initializer(string[] args)
     {
         MainWindow.ChangeSize += OnChangeSize;
-        
-        _device.Create(MainWindow.Win32Handler);
-        _device.ConfigRenderTarget();
 
-        var trianlgeModule = Module.Quadrilateral;
-        if (_renderer is Renderer renderer)
-            renderer.AddDrawElement(trianlgeModule);
+        var trianlgeModule = Module.Cube;
+        var quadilateralModule = Module.Cube;
+
+        if (_renderer is not Renderer renderer) return;
+        
+        renderer.AddDrawElement(trianlgeModule);
+        // renderer.AddDrawElement(quadilateralModule);
     }
 
     private void OnChangeSize(IntPtr window, int width, int height)
@@ -40,7 +49,10 @@ public class GameApp : Application
     {
         _renderer.Updata();
         _renderer.Render();
-
+        
+        _d2DRenderer.Render();
+        _d2DRenderer.Updata();
+        
         _device.Present();
     }
 }

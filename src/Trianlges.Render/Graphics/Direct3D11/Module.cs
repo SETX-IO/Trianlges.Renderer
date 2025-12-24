@@ -35,10 +35,10 @@ public class Module : DrawElement
 
         vertices =
         [
-            new(new Vector3(-0.5f, 0.5f, 0), Vector3.UnitX),
-            new(new Vector3(0.5f, 0.5f, 0), Vector3.UnitY),
-            new(new Vector3(0.5f, -0.5f, 0), Vector3.UnitZ),
-            new(new Vector3(-0.5f, -0.5f, 0), new Vector3(1,1,0))
+            new Vertex(new Vector3(-0.5f, 0.5f, 0), Vector3.UnitX),
+            new Vertex(new Vector3(0.5f, 0.5f, 0), Vector3.UnitY),
+            new Vertex(new Vector3(0.5f, -0.5f, 0), Vector3.UnitZ),
+            new Vertex(new Vector3(-0.5f, -0.5f, 0), new Vector3(1,1,0))
         ];
 
         indiecs = [0,1,2,   2,3,0];
@@ -47,13 +47,13 @@ public class Module : DrawElement
         
         vertices =
         [
-            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), new Vector3(0.0f, 0.0f, 0.0f)),
-            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(1.0f, 0.0f, 0.0f)),
+            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), Vector3.Zero),
+            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), Vector3.UnitX),
             new Vertex(new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, 1.0f, 0.0f)),
-            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), new Vector3(0.0f, 1.0f, 0.0f)),
-            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)),
+            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), Vector3.UnitY),
+            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), Vector3.UnitZ),
             new Vertex(new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(1.0f, 0.0f, 1.0f)),
-            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f)),
+            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), Vector3.One),
             new Vertex(new Vector3(1.0f, -1.0f, 1.0f), new Vector3(0.0f, 1.0f, 1.0f))
         ];
 
@@ -116,7 +116,7 @@ public class Module : DrawElement
         _vShaderLayout = device.CreateInputLayout(inputDesc, vShaderCode.Span);
     }
 
-    public override void Render(D3DDevice device)
+    public override void Render(IDevice3D device)
     {
         var context = device.DContext;
 

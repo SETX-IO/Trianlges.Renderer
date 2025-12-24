@@ -1,4 +1,5 @@
-﻿using Trianlges.Render.Graphics.Direct3D11;
+﻿using System.Numerics;
+using Trianlges.Render.Graphics.Direct3D11;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -12,12 +13,16 @@ public abstract class DrawElement
     protected ID3D11PixelShader? _pShader;
     protected ID3D11VertexShader? _vShader;
     protected ID3D11InputLayout? _vShaderLayout;
+    
+    public Vector3 Position { get; set; }
 
-    public virtual void Updata()
+    public virtual void Updata(ref ConstantBufferData bufferData)
     {
+        var translation = Matrix4x4.CreateTranslation(Position);
+        bufferData.Module = translation;
     }
 
-    public virtual void Render(D3DDevice device)
+    public virtual void Render(IDevice3D device)
     {
         var context = device.DContext;
         var stride = Vertex.Size;

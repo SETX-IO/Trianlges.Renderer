@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Trianlges.Render.Graphics.Direct2D;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -10,7 +11,7 @@ namespace Trianlges.Render.Graphics.Direct3D11;
 /// <summary>
 ///     Marager DirectX11 Device.
 /// </summary>
-public class D3DDevice
+public class D3DDevice : IDevice3D, IDevice2D
 {
     private Viewport _viewport;
 
@@ -43,37 +44,35 @@ public class D3DDevice
         ConfigRenderTarget();
     }
 
-    public ID3D11Device Device { get; private set; } = null!;
+    public ID3D11Device Device { get; protected set; } = null!;
     public ID3D11DeviceContext DContext { get; private set; } = null!;
-
     public IDXGISwapChain SwapChain { get; private set; } = null!;
     public ID3D11RenderTargetView? RenderTarget { get; private set; }
     public ID3D11DepthStencilView? DepthStencil { get; private set; }
 
     public void Create(IntPtr windowHandler)
     {
+        var createFlags = DeviceCreationFlags.BgraSupport;
+        
         var swDesc = new SwapChainDescription
         {
             BufferCount = 1,
             BufferDescription = new ModeDescription
             {
-                Format = Format.R8G8B8A8_UNorm
+                Format = Format.B8G8R8A8_UNorm
             },
             BufferUsage = Usage.RenderTargetOutput,
             OutputWindow = windowHandler,
             SampleDescription = new SampleDescription(1, 0),
             Windowed = true
         };
-
-        var createFlags = DeviceCreationFlags.None;
-
 #if DEBUG
         createFlags |= DeviceCreationFlags.Debug;
 #endif
         
         D3D11.D3D11CreateDeviceAndSwapChain(
             null, DriverType.Hardware,
-            createFlags, null!,
+            createFlags, [],
             swDesc, out var sw,
             out var device, out _,
             out var context).CheckError();
@@ -90,10 +89,9 @@ public class D3DDevice
     {
         if (width == 0 || hieght == 0) return;
         
-        SwapChain.ResizeBuffers(1, width, hieght);
+        SwapChain.ResizeBuffers(1, width, hieght, Format.B8G8R8A8_UNorm);
         RenderTarget?.Release();
         DepthStencil?.Release();
-        
         
         ConfigRenderTarget();
     }
@@ -111,15 +109,12 @@ public class D3DDevice
         var depthBuffer = Device.CreateTexture2D(depthDesc);
         DepthStencil = Device.CreateDepthStencilView(depthBuffer, depthViewDesc);
 
-        DContext.OMSetRenderTargets([RenderTarget]);
+        DContext.OMSetRenderTargets([RenderTarget], DepthStencil);
 
         _viewport = new Viewport(0, 0, bbDesc.Width, bbDesc.Height, 0, 1);
         
         DContext.RSSetViewports([_viewport]);
     }
 
-    public void Present()
-    {
-        SwapChain.Present(0, PresentFlags.None);
-    }
+    public void Present() => SwapChain.Present(0, PresentFlags.None);
 }
