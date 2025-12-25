@@ -108,7 +108,7 @@ public class Mesh : DrawElement
     {
         var context = device.DContext;
 
-        if (VertexShader == null && PixelShader == null)
+        if (IndexBuffer == null)
         {
             base.Init(device);
             CreateRenderResouces(device.Device);

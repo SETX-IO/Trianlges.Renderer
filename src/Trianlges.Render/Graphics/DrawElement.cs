@@ -1,5 +1,4 @@
 ﻿using Trianlges.Render.Graphics.Direct3D11;
-using Vortice.D3DCompiler;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -10,27 +9,19 @@ public abstract class DrawElement
 {
     public ID3D11Buffer VertextBuffer { get; protected set; } = null!;
     public ID3D11Buffer? IndexBuffer { get; protected set; }
-    public ID3D11PixelShader? PixelShader { get; protected set; }
-    public ID3D11VertexShader? VertexShader { get; protected set; }
-    public ID3D11InputLayout? VertextLayout { get; protected set; }
+    public ShaderProgame? Progame { get; protected set; }
 
     public void Init(IDevice3D device3D)
     {
         var device = device3D.Device;
         
-        var vShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "vert", "vs_5_0");
-        var pShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "frag", "ps_5_0");
+        var vertextDesc = VertexInputElement.GetVertextElements(VertextType.Positon, VertextType.Color3);
 
-        InputElementDescription[] inputDesc =
-        [
-            VertexInputElement.Position,
-            VertexInputElement.Color3
-        ];
-
-        VertexShader = device.CreateVertexShader(vShaderCode.Span);
-        PixelShader = device.CreatePixelShader(pShaderCode.Span);
-
-        VertextLayout = device.CreateInputLayout(inputDesc, vShaderCode.Span);
+        Progame = ShaderProgame
+            .Create(device)
+            .Complier("Assets/Shader.hlsl")
+            .ConfigInput(vertextDesc)
+            .Build();
     }
     
     public virtual void Updata(IDevice3D device)
@@ -45,12 +36,10 @@ public abstract class DrawElement
 
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
-        context.VSSetShader(VertexShader);
-        context.PSSetShader(PixelShader);
+        Progame.Bind(context);
         
         context.IASetVertexBuffers(0, 1, [VertextBuffer], [stride], [offset]);
         
-        context.IASetInputLayout(VertextLayout);
         if (IndexBuffer != null) context.IASetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
     }
 }

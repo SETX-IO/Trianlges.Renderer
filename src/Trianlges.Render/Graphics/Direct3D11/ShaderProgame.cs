@@ -1,0 +1,109 @@
+using System;
+using System.IO;
+using Vortice.Direct3D11;
+using Vortice.D3DCompiler;
+
+namespace Trianlges.Render.Graphics.Direct3D11;
+
+public class ShaderProgame : ICompilerShader, IConfigShader, IBuild
+{
+    private ReadOnlyMemory<byte> _vertextShaderCode;
+    private readonly ID3D11Device _refDevice;
+    public ID3D11PixelShader? PixelShader { get; protected set; }
+    public ID3D11VertexShader? VertexShader { get; protected set; }
+    public ID3D11InputLayout? VertexLayout { get; protected set; }
+
+    private ShaderProgame(ID3D11Device device)
+    {
+        _refDevice = device;
+    }
+    
+    public static ICompilerShader Create(ID3D11Device device)
+    {
+        var instance = new ShaderProgame(device);
+        return instance;
+    }
+    
+    private ReadOnlyMemory<byte> CompilerShader(string shaderPath, string entryPoint, string profile)
+    {
+        string path;
+        ReadOnlyMemory<byte> shaderCode;
+        var cacheFile = $"{entryPoint}_{Path.GetFileNameWithoutExtension(shaderPath)}.psv";
+        
+        try
+        {
+            path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(shaderPath)), cacheFile);
+        }
+        catch (Exception e) when(e is ArgumentException or ArgumentException)
+        {
+            Console.WriteLine(e);
+            path = cacheFile;
+        }
+
+        if (!File.Exists(path))
+        {
+            shaderCode = Compiler.CompileFromFile(shaderPath, entryPoint, profile);
+            using var stream = File.Create(path);
+
+            stream.Write(shaderCode.Span);
+        }
+        else shaderCode = File.ReadAllBytes(path);
+        
+        
+        return shaderCode;
+    }
+
+    public IConfigShader Complier(string shaderPath)
+    {
+        var vCode = CompilerShader(shaderPath, "vert", "vs_5_0");
+        var pCode = CompilerShader(shaderPath, "frag", "ps_5_0");
+
+        _vertextShaderCode = vCode;
+        
+        VertexShader = _refDevice.CreateVertexShader(vCode.Span);
+        PixelShader = _refDevice.CreatePixelShader(pCode.Span);
+
+        return this;
+    }
+
+    public IBuild ConfigInput(InputElementDescription[] vertextInput)
+    {
+        VertexLayout = _refDevice.CreateInputLayout(vertextInput, _vertextShaderCode.Span);
+        
+        return this;
+    }
+
+    public ShaderProgame Build() => this;
+
+    public void Bind(ID3D11DeviceContext context)
+    {
+        context.VSSetShader(VertexShader);
+        context.PSSetShader(PixelShader);
+        
+        context.IASetInputLayout(VertexLayout);
+    }
+}
+
+public interface ICompilerShader
+{
+    IConfigShader Complier(string shaderPath)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public interface IConfigShader
+{
+    IBuild ConfigInput(InputElementDescription[] vertextInput)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public interface IBuild
+{
+    ShaderProgame Build()
+    {
+        throw new NotImplementedException();
+    }
+}

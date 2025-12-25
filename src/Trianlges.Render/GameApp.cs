@@ -25,10 +25,6 @@ public class GameApp : Application
         var trianlgeModule = Mesh.Quadrilateral;
         if (_renderer is Renderer renderer)
             renderer.AddDrawElement(trianlgeModule);
-
-        // var guiContxet = ImGui.CreateContext();
-        // ImGui.SetCurrentContext(guiContxet);
-        // ImDrawDataPtr a = ImGui.GetDrawData();
     }
 
     private void OnChangeSize(IntPtr window, int width, int height)
@@ -47,6 +43,9 @@ public class GameApp : Application
         // ImGui.NewFrame();
         //
         // ImGui.Render();
+        
+        _imGuiRenerer.Updata();
+        _imGuiRenerer.Render();
         
         _renderer.Updata();
         _renderer.Render();
