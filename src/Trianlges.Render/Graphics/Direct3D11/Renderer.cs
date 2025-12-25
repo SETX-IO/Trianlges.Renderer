@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -56,19 +56,19 @@ public class Renderer : IRenderer
         }
         
         _index += 0.0002f;
-        var rotation = Matrix4x4.CreateRotationY(_index);
+        // var rotation = Matrix4x4.CreateRotationY(_index);
         var rotation2 = Matrix4x4.CreateRotationY(-_index);
-        var translation = Matrix4x4.CreateTranslation(0, 0, 1);
-        var scale = Matrix4x4.CreateScale(0.8f);
+        var translation = Matrix4x4.CreateTranslation(0, MathF.Cos(_index), 5);
+        // var scale = Matrix4x4.CreateScale(0.8f);
         
         var tModule = _drawElements[0];
         // var qModule = _drawElements[1];
         
-        tModule.Position = new Vector3(0, MathF.Cos(_index), 5);
-        
-        tModule.Updata(ref _constantData);
-        
-        _constantData.Module = Matrix4x4.Transpose(rotation2 * _constantData.Module);
+        // tModule.Position = new Vector3(0, MathF.Cos(_index), 5);
+        //
+        // tModule.Updata(ref _constantData);
+         
+        _constantData.Module = Matrix4x4.Transpose(rotation2 * translation);
         
         var map1 = _device.DContext.Map(_contextBuffer, MapMode.WriteDiscard);
         Unsafe.Copy(map1.DataPointer.ToPointer(), ref _constantData);

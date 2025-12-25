@@ -1,4 +1,4 @@
-﻿namespace Trianlges.Render.Graphics;
+namespace Trianlges.Render.Graphics;
 
 public interface IRenderer
 {

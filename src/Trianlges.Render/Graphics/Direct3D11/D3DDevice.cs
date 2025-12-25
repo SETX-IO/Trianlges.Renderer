@@ -46,6 +46,7 @@ public class D3DDevice : IDevice3D, IDevice2D
 
     public ID3D11Device Device { get; protected set; } = null!;
     public ID3D11DeviceContext DContext { get; private set; } = null!;
+
     public IDXGISwapChain SwapChain { get; private set; } = null!;
     public ID3D11RenderTargetView? RenderTarget { get; private set; }
     public ID3D11DepthStencilView? DepthStencil { get; private set; }

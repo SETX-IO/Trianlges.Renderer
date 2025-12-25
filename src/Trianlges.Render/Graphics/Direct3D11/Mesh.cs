@@ -1,26 +1,28 @@
 ﻿using System.Numerics;
 using Vortice;
-using Vortice.D3DCompiler;
 using Vortice.Direct3D11;
-using Vortice.DXGI;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
 
-public class Module : DrawElement
+public class Mesh : DrawElement
 {
-    public static readonly Module Trianlge;
-    public static readonly Module Quadrilateral;
-    public static readonly Module Cube;
+    public static readonly Mesh Trianlge;
+    public static readonly Mesh Quadrilateral;
+    public static readonly Mesh Cube;
     
     private uint[] _indiecs = [];
-
     private Vertex[] _vertices = null!;
 
-    static Module()
+    public Mesh()
     {
-        Trianlge = new Module();
-        Quadrilateral = new Module();
-        Cube = new Module();
+        
+    }
+    
+    static Mesh()
+    {
+        Trianlge = new Mesh();
+        Quadrilateral = new Mesh();
+        Cube = new Mesh();
 
         Vertex[] vertices =
         [
@@ -47,13 +49,13 @@ public class Module : DrawElement
         
         vertices =
         [
-            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), Vector3.Zero),
-            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), Vector3.UnitX),
+            new Vertex(new Vector3(-1.0f, -1.0f, -1.0f), new Vector3(0.0f, 0.0f, 0.0f)),
+            new Vertex(new Vector3(-1.0f, 1.0f, -1.0f), new Vector3(1.0f, 0.0f, 0.0f)),
             new Vertex(new Vector3(1.0f, 1.0f, -1.0f), new Vector3(1.0f, 1.0f, 0.0f)),
-            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), Vector3.UnitY),
-            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), Vector3.UnitZ),
+            new Vertex(new Vector3(1.0f, -1.0f, -1.0f), new Vector3(0.0f, 1.0f, 0.0f)),
+            new Vertex(new Vector3(-1.0f, -1.0f, 1.0f), new Vector3(0.0f, 0.0f, 1.0f)),
             new Vertex(new Vector3(-1.0f, 1.0f, 1.0f), new Vector3(1.0f, 0.0f, 1.0f)),
-            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), Vector3.One),
+            new Vertex(new Vector3(1.0f, 1.0f, 1.0f), new Vector3(1.0f, 1.0f, 1.0f)),
             new Vertex(new Vector3(1.0f, -1.0f, 1.0f), new Vector3(0.0f, 1.0f, 1.0f))
         ];
 
@@ -76,7 +78,7 @@ public class Module : DrawElement
         Cube.Init(vertices, indiecs);
     }
 
-    private void Init(Vertex[] vertices, uint[] indiecs)
+    public void Init(Vertex[] vertices, uint[] indiecs)
     {
         _vertices = vertices;
         _indiecs = indiecs;
@@ -91,7 +93,7 @@ public class Module : DrawElement
         var vData = DataStream.Create(_vertices, true, true);
         VertextBuffer = device.CreateBuffer(vBufferDesc, vData);
 
-        if (_indiecs is not { Length: 0 })
+        if (_indiecs is not { Length: 0 } || IndexBuffer == null)
         {
             var iBufferDesc =
                 new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
@@ -108,8 +110,8 @@ public class Module : DrawElement
 
         if (IndexBuffer == null)
         {
+            base.Init(device);
             CreateRenderResouces(device.Device);
-            Init(device);
         }
 
         base.Render(device);

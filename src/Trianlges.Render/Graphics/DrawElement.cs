@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Trianlges.Render.Graphics.Direct3D11;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
@@ -8,18 +8,25 @@ namespace Trianlges.Render.Graphics;
 
 public abstract class DrawElement
 {
-    protected ID3D11Buffer _vBuffer;
-    protected ID3D11Buffer? _iBuffer;
-    protected ID3D11PixelShader? _pShader;
-    protected ID3D11VertexShader? _vShader;
-    protected ID3D11InputLayout? _vShaderLayout;
-    
-    public Vector3 Position { get; set; }
+    public ID3D11Buffer VertextBuffer { get; protected set; } = null!;
+    public ID3D11Buffer? IndexBuffer { get; protected set; }
+    public ShaderProgame? Progame { get; protected set; }
 
-    public virtual void Updata(ref ConstantBufferData bufferData)
+    public void Init(IDevice3D device3D)
     {
-        var translation = Matrix4x4.CreateTranslation(Position);
-        bufferData.Module = translation;
+        var device = device3D.Device;
+        
+        var vertextDesc = VertexInputElement.GetVertextElements(VertextType.Positon, VertextType.Color3);
+
+        Progame = ShaderProgame
+            .Create(device)
+            .Complier("Assets/Shader.hlsl")
+            .ConfigInput(vertextDesc)
+            .Build();
+    }
+    
+    public virtual void Updata(IDevice3D device)
+    {
     }
 
     public virtual void Render(IDevice3D device)
@@ -30,12 +37,10 @@ public abstract class DrawElement
 
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
-        context.VSSetShader(_vShader);
-        context.PSSetShader(_pShader);
+        Progame.Bind(context);
         
-        context.IASetVertexBuffers(0, 1, [_vBuffer], [stride], [offset]);
+        context.IASetVertexBuffers(0, 1, [VertextBuffer], [stride], [offset]);
         
-        context.IASetInputLayout(_vShaderLayout);
-        if (_iBuffer != null) context.IASetIndexBuffer(_iBuffer, Format.R32_UInt, 0);
+        if (IndexBuffer != null) context.IASetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
     }
 }
