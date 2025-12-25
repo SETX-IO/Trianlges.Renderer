@@ -1,26 +1,28 @@
 ﻿using System.Numerics;
 using Vortice;
-using Vortice.D3DCompiler;
 using Vortice.Direct3D11;
-using Vortice.DXGI;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
 
-public class Module : DrawElement
+public class Mesh : DrawElement
 {
-    public static readonly Module Trianlge;
-    public static readonly Module Quadrilateral;
-    public static readonly Module Cube;
+    public static readonly Mesh Trianlge;
+    public static readonly Mesh Quadrilateral;
+    public static readonly Mesh Cube;
     
     private uint[] _indiecs = [];
-
     private Vertex[] _vertices = null!;
 
-    static Module()
+    public Mesh()
     {
-        Trianlge = new Module();
-        Quadrilateral = new Module();
-        Cube = new Module();
+        
+    }
+    
+    static Mesh()
+    {
+        Trianlge = new Mesh();
+        Quadrilateral = new Mesh();
+        Cube = new Mesh();
 
         Vertex[] vertices =
         [
@@ -35,10 +37,10 @@ public class Module : DrawElement
 
         vertices =
         [
-            new(new Vector3(-0.5f, 0.5f, 0), Vector3.UnitX),
-            new(new Vector3(0.5f, 0.5f, 0), Vector3.UnitY),
-            new(new Vector3(0.5f, -0.5f, 0), Vector3.UnitZ),
-            new(new Vector3(-0.5f, -0.5f, 0), new Vector3(1,1,0))
+            new Vertex(new Vector3(-0.5f, 0.5f, 0), Vector3.UnitX),
+            new Vertex(new Vector3(0.5f, 0.5f, 0), Vector3.UnitY),
+            new Vertex(new Vector3(0.5f, -0.5f, 0), Vector3.UnitZ),
+            new Vertex(new Vector3(-0.5f, -0.5f, 0), new Vector3(1,1,0))
         ];
 
         indiecs = [0,1,2,   2,3,0];
@@ -89,43 +91,32 @@ public class Module : DrawElement
                 ResourceUsage.Immutable);
 
         var vData = DataStream.Create(_vertices, true, true);
-        _vBuffer = device.CreateBuffer(vBufferDesc, vData);
+        VertextBuffer = device.CreateBuffer(vBufferDesc, vData);
 
-        if (_indiecs is not { Length: 0 })
+        if (_indiecs is not { Length: 0 } || IndexBuffer == null)
         {
             var iBufferDesc =
                 new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
                     ResourceUsage.Immutable);
 
             var iData = DataStream.Create(_indiecs, true, true);
-            _iBuffer = device.CreateBuffer(iBufferDesc, iData);
+            IndexBuffer = device.CreateBuffer(iBufferDesc, iData);
         }
-
-        var vShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "vert", "vs_5_0");
-        var pShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "frag", "ps_5_0");
-
-        InputElementDescription[] inputDesc =
-        [
-            new("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new("COLOR", 0, Format.R32G32B32_Float, 12, 0)
-        ];
-
-        _vShader = device.CreateVertexShader(vShaderCode.Span);
-        _pShader = device.CreatePixelShader(pShaderCode.Span);
-
-        _vShaderLayout = device.CreateInputLayout(inputDesc, vShaderCode.Span);
     }
 
-    public override void Render(D3DDevice device)
+    public override void Render(IDevice3D device)
     {
         var context = device.DContext;
 
-        if (_vShader == null && _pShader == null)
+        if (VertexShader == null && PixelShader == null)
+        {
+            base.Init(device);
             CreateRenderResouces(device.Device);
+        }
 
         base.Render(device);
         
-        if (_iBuffer == null)
+        if (IndexBuffer == null)
             context.Draw((uint)_vertices.Length, 0);
         else
             context.DrawIndexed((uint)_indiecs.Length, 0, 0);

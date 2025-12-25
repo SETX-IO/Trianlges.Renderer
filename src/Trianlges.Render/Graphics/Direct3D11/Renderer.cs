@@ -8,7 +8,7 @@ namespace Trianlges.Render.Graphics.Direct3D11;
 public class Renderer : IRenderer
 {
     public readonly Camera Camera;
-    private readonly D3DDevice _device;
+    private readonly IDevice3D _device;
     private readonly List<DrawElement> _drawElements;
 
     private ID3D11Buffer? _contextBuffer;
@@ -16,7 +16,7 @@ public class Renderer : IRenderer
 
     private float _index;
 
-    public Renderer(D3DDevice device)
+    public Renderer(IDevice3D device)
     {
         _device = device;
         _drawElements = [];

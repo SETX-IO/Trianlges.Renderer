@@ -10,7 +10,7 @@ namespace Trianlges.Render.Graphics.Direct3D11;
 /// <summary>
 ///     Marager DirectX11 Device.
 /// </summary>
-public class D3DDevice
+public class D3DDevice : IDevice3D
 {
     private Viewport _viewport;
 
@@ -118,7 +118,7 @@ public class D3DDevice
         DContext.RSSetViewports([_viewport]);
     }
 
-    public void Present()
+    void IDevice.Present()
     {
         SwapChain.Present(0, PresentFlags.None);
     }

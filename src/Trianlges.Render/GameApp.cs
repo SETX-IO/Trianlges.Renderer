@@ -7,30 +7,27 @@ namespace Trianlges.Render;
 
 public class GameApp : Application
 {
-    private readonly D3DDevice _device = new();
+    private readonly IDevice3D _device;
     private readonly IRenderer _renderer;
-    // private readonly IRenderer _imGuiRenerer;
+    private readonly IRenderer _imGuiRenerer;
 
     public GameApp(Window mainWindow, string[] args) : base(mainWindow, args)
     {
+        _device = new D3DDevice(MainWindow.Win32Handler);
         _renderer = new Renderer(_device);
-        // _imGuiRenerer = new ImGuiRenderer(_device);
+        _imGuiRenerer = new ImGuiRenderer(_device);
     }
 
     protected override void Initializer(string[] args)
     {
         MainWindow.ChangeSize += OnChangeSize;
-        
-        _device.Create(MainWindow.Win32Handler);
-        _device.ConfigRenderTarget();
 
-        var trianlgeModule = Module.Quadrilateral;
+        var trianlgeModule = Mesh.Quadrilateral;
         if (_renderer is Renderer renderer)
             renderer.AddDrawElement(trianlgeModule);
 
         // var guiContxet = ImGui.CreateContext();
         // ImGui.SetCurrentContext(guiContxet);
-        // ImGui.ShowDemoWindow();
         // ImDrawDataPtr a = ImGui.GetDrawData();
     }
 
@@ -40,8 +37,9 @@ public class GameApp : Application
         
         if (_renderer is Renderer renderer)
             renderer.Camera.Updata();
-        
-        _device.ResetSize((uint)width, (uint)height);
+
+        if (_device is D3DDevice device)
+            device.ResetSize((uint)width, (uint)height);
     }
 
     protected override void Render()

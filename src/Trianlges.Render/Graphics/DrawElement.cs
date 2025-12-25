@@ -1,4 +1,5 @@
 ﻿using Trianlges.Render.Graphics.Direct3D11;
+using Vortice.D3DCompiler;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -7,17 +8,36 @@ namespace Trianlges.Render.Graphics;
 
 public abstract class DrawElement
 {
-    protected ID3D11Buffer _vBuffer;
-    protected ID3D11Buffer? _iBuffer;
-    protected ID3D11PixelShader? _pShader;
-    protected ID3D11VertexShader? _vShader;
-    protected ID3D11InputLayout? _vShaderLayout;
+    public ID3D11Buffer VertextBuffer { get; protected set; } = null!;
+    public ID3D11Buffer? IndexBuffer { get; protected set; }
+    public ID3D11PixelShader? PixelShader { get; protected set; }
+    public ID3D11VertexShader? VertexShader { get; protected set; }
+    public ID3D11InputLayout? VertextLayout { get; protected set; }
 
-    public virtual void Updata(D3DDevice device)
+    public void Init(IDevice3D device3D)
+    {
+        var device = device3D.Device;
+        
+        var vShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "vert", "vs_5_0");
+        var pShaderCode = Compiler.CompileFromFile("Assets/Shader.hlsl", "frag", "ps_5_0");
+
+        InputElementDescription[] inputDesc =
+        [
+            VertexInputElement.Position,
+            VertexInputElement.Color3
+        ];
+
+        VertexShader = device.CreateVertexShader(vShaderCode.Span);
+        PixelShader = device.CreatePixelShader(pShaderCode.Span);
+
+        VertextLayout = device.CreateInputLayout(inputDesc, vShaderCode.Span);
+    }
+    
+    public virtual void Updata(IDevice3D device)
     {
     }
 
-    public virtual void Render(D3DDevice device)
+    public virtual void Render(IDevice3D device)
     {
         var context = device.DContext;
         var stride = Vertex.Size;
@@ -25,12 +45,12 @@ public abstract class DrawElement
 
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
-        context.VSSetShader(_vShader);
-        context.PSSetShader(_pShader);
+        context.VSSetShader(VertexShader);
+        context.PSSetShader(PixelShader);
         
-        context.IASetVertexBuffers(0, 1, [_vBuffer], [stride], [offset]);
+        context.IASetVertexBuffers(0, 1, [VertextBuffer], [stride], [offset]);
         
-        context.IASetInputLayout(_vShaderLayout);
-        if (_iBuffer != null) context.IASetIndexBuffer(_iBuffer, Format.R32_UInt, 0);
+        context.IASetInputLayout(VertextLayout);
+        if (IndexBuffer != null) context.IASetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
     }
 }
