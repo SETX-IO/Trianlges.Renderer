@@ -40,12 +40,11 @@ public class GameApp : Application
 
     protected override void Render()
     {
-        // ImGui.NewFrame();
-        //
-        // ImGui.Render();
-        
+
         _imGuiRenerer.Updata();
         _imGuiRenerer.Render();
+        // ImGui.ShowDemoWindow();
+        
         
         _renderer.Updata();
         _renderer.Render();

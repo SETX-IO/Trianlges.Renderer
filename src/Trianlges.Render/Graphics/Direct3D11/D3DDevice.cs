@@ -94,7 +94,6 @@ public class D3DDevice : IDevice3D
         RenderTarget?.Release();
         DepthStencil?.Release();
         
-        
         ConfigRenderTarget();
     }
 
@@ -111,7 +110,7 @@ public class D3DDevice : IDevice3D
         var depthBuffer = Device.CreateTexture2D(depthDesc);
         DepthStencil = Device.CreateDepthStencilView(depthBuffer, depthViewDesc);
 
-        DContext.OMSetRenderTargets([RenderTarget]);
+        DContext.OMSetRenderTargets([RenderTarget], DepthStencil);
 
         _viewport = new Viewport(0, 0, bbDesc.Width, bbDesc.Height, 0, 1);
         

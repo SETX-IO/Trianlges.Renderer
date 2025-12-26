@@ -11,17 +11,16 @@ public abstract class DrawElement
     public ID3D11Buffer? IndexBuffer { get; protected set; }
     public ShaderProgame? Progame { get; protected set; }
 
-    public void Init(IDevice3D device3D)
+    public void Init(ShaderProgame progame)
     {
-        var device = device3D.Device;
-        
-        var vertextDesc = VertexInputElement.GetVertextElements(VertextType.Positon, VertextType.Color3);
-
-        Progame = ShaderProgame
-            .Create(device)
-            .Complier("Assets/Shader.hlsl")
-            .ConfigInput(vertextDesc)
-            .Build();
+        Progame = progame;
+    }
+    
+    public void Init(ID3D11Buffer vertexBffer, ID3D11Buffer indexBffer,  ShaderProgame progame)
+    {
+        VertextBuffer = vertexBffer;
+        IndexBuffer = indexBffer;
+        Progame = progame;
     }
     
     public virtual void Updata(IDevice3D device)
