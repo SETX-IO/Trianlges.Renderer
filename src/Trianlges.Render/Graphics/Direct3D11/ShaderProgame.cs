@@ -7,8 +7,8 @@ namespace Trianlges.Render.Graphics.Direct3D11;
 
 public class ShaderProgame : ICompilerShader, IConfigShader, IBuild
 {
-    private ReadOnlyMemory<byte> _vertextShaderCode;
     private readonly ID3D11Device _refDevice;
+    private ReadOnlyMemory<byte> _vertextShaderCode;
     public ID3D11PixelShader? PixelShader { get; protected set; }
     public ID3D11VertexShader? VertexShader { get; protected set; }
     public ID3D11InputLayout? VertexLayout { get; protected set; }

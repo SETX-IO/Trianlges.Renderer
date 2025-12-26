@@ -6,7 +6,7 @@ namespace Trianlges.Render;
 
 public class GameApp : Application
 {
-    private readonly D3DDevice _device = new();
+    private readonly D3DDevice _device;
     private readonly IRenderer _renderer;
     private readonly IRenderer _d2DRenderer;
 
@@ -26,8 +26,8 @@ public class GameApp : Application
     {
         MainWindow.ChangeSize += OnChangeSize;
 
-        var trianlgeModule = Module.Cube;
-        var quadilateralModule = Module.Cube;
+        var trianlgeModule = Mesh.Quadrilateral;
+        var quadilateralModule = Mesh.Cube;
 
         if (_renderer is not Renderer renderer) return;
         

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using Vortice;
 using Vortice.Direct3D11;
 
@@ -78,7 +79,7 @@ public class Mesh : DrawElement
         Cube.Init(vertices, indiecs);
     }
 
-    public void Init(Vertex[] vertices, uint[] indiecs)
+    private void Init(Vertex[] vertices, uint[] indiecs)
     {
         _vertices = vertices;
         _indiecs = indiecs;
@@ -93,15 +94,14 @@ public class Mesh : DrawElement
         var vData = DataStream.Create(_vertices, true, true);
         VertextBuffer = device.CreateBuffer(vBufferDesc, vData);
 
-        if (_indiecs is not { Length: 0 } || IndexBuffer == null)
-        {
-            var iBufferDesc =
-                new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
-                    ResourceUsage.Immutable);
+        if (_indiecs is { Length: 0 } && IndexBuffer != null) return;
+        
+        var iBufferDesc =
+            new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
+                ResourceUsage.Immutable);
 
-            var iData = DataStream.Create(_indiecs, true, true);
-            IndexBuffer = device.CreateBuffer(iBufferDesc, iData);
-        }
+        var iData = DataStream.Create(_indiecs, true, true);
+        IndexBuffer = device.CreateBuffer(iBufferDesc, iData);
     }
 
     public override void Render(IDevice3D device)
@@ -110,7 +110,14 @@ public class Mesh : DrawElement
 
         if (IndexBuffer == null)
         {
-            base.Init(device);
+            var vertextDesc = VertexInputElement.GetVertextElements(VertextType.Position, VertextType.Color3);
+            
+            Progame = ShaderProgame
+                .Create(device.Device)
+                .Complier("Assets/Shader")
+                .ConfigInput(vertextDesc)
+                .Build();
+            
             CreateRenderResouces(device.Device);
         }
 
