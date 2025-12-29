@@ -1,6 +1,7 @@
 ﻿using System;
 using Trianlges.Render.Graphics;
 using Trianlges.Render.Graphics.Direct3D11;
+using Trianlges.Render.Util;
 
 namespace Trianlges.Render;
 
@@ -16,10 +17,10 @@ public class GameApp : Application
         
         _renderer = new Graphics.Direct3D11.Renderer(_device);
 
-        var d2dRender = new Graphics.Direct2D.Renderer(_device);
-        d2dRender.Init();
-        
-        _d2DRenderer = d2dRender;
+        // var d2dRender = new Graphics.Direct2D.Renderer(_device);
+        // d2dRender.Init();
+        //
+        // _d2DRenderer = d2dRender;
     }
 
     protected override void Initializer(string[] args)
@@ -27,7 +28,7 @@ public class GameApp : Application
         MainWindow.ChangeSize += OnChangeSize;
 
         var trianlgeModule = Mesh.Quadrilateral;
-        var quadilateralModule = Mesh.Cube;
+        // var quadilateralModule = Mesh.Cube;
 
         if (_renderer is not Renderer renderer) return;
         
@@ -50,8 +51,8 @@ public class GameApp : Application
         _renderer.Updata();
         _renderer.Render();
         
-        _d2DRenderer.Render();
-        _d2DRenderer.Updata();
+        // _d2DRenderer.Render();
+        // _d2DRenderer.Updata();
         
         _device.Present();
     }

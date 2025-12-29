@@ -15,4 +15,16 @@
         <PackageReference Include="Vortice.Direct3D11" Version="3.6.2"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Util\WIC\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="Util\WIC\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Util\WIC\**" />
+    </ItemGroup>
+
 </Project>

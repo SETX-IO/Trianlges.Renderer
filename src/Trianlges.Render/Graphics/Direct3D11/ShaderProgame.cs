@@ -5,7 +5,7 @@ using Vortice.D3DCompiler;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
 
-public class ShaderProgame : ICompilerShader, IConfigShader, IBuild
+public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
 {
     private readonly ID3D11Device _refDevice;
     private ReadOnlyMemory<byte> _vertextShaderCode;
@@ -66,14 +66,18 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuild
         return this;
     }
 
-    public IBuild ConfigInput(InputElementDescription[] vertextInput)
+    public IBuildResource ConfigInput(InputElementDescription[] vertextInput)
     {
         VertexLayout = _refDevice.CreateInputLayout(vertextInput, _vertextShaderCode.Span);
         
         return this;
     }
 
-    public ShaderProgame Build() => this;
+    public T Build<T>() where T : class, IBuildResource
+    {
+        var instnce = this as T;
+        return instnce ?? throw new TypeAccessException();
+    }
 
     public void Bind(ID3D11DeviceContext context)
     {
@@ -94,15 +98,7 @@ public interface ICompilerShader
 
 public interface IConfigShader
 {
-    IBuild ConfigInput(InputElementDescription[] vertextInput)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public interface IBuild
-{
-    ShaderProgame Build()
+    IBuildResource ConfigInput(InputElementDescription[] vertextInput)
     {
         throw new NotImplementedException();
     }

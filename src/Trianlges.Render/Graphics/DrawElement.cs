@@ -31,7 +31,7 @@ public abstract class DrawElement
     public virtual void Render(IDevice3D device)
     {
         var context = device.DContext;
-        var stride = Vertex.Size;
+        var stride = VertexUv.Size;
         uint offset = 0;
 
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);

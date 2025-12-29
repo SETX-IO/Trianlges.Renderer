@@ -15,6 +15,14 @@ public struct Vertex(Vector3 position, Vector3 color)
     public static readonly uint Size = (uint)Unsafe.SizeOf<Vertex>();
 }
 
+public struct VertexUv(Vector3 position, Vector2 uv)
+{
+    public Vector3 Position = position;
+    public Vector2 Uv = uv;
+
+    public static readonly uint Size = (uint)Unsafe.SizeOf<VertexUv>();
+}
+
 public struct ConstantBufferData(Matrix4x4 world, Matrix4x4 view, Matrix4x4 proj)
 {
     public Matrix4x4 Module = world;
@@ -44,9 +52,7 @@ public struct VertexInputElement
         var descs = new List<InputElementDescription>();
         foreach (var vertextType in element)
         {
-            InputElementDescription desc;
-
-            desc = vertextType switch
+            var desc = vertextType switch
             {
                 VertextType.Position => Position,
                 VertextType.Position2 => Position2,
@@ -107,7 +113,7 @@ public struct VertexInputElement
     {
         get
         {
-            var element = new InputElementDescription("COLOR", 0, Format.R32G32B32A32_Float, _offset);
+            var element = new InputElementDescription("COLOR", 0, Format.R32G32B32A32_Float, _offset, 0);
             _offset += Float128;
 
             return element;
@@ -118,7 +124,7 @@ public struct VertexInputElement
     {
         get
         {
-            var element = new InputElementDescription("TEXCOORD", 0, Format.R32G32_Float, _offset);
+            var element = new InputElementDescription("TEXCOORD", 0, Format.R32G32_Float, _offset, 0);
             _offset += Float64;
 
             return element;
@@ -129,7 +135,7 @@ public struct VertexInputElement
     {
         get
         {
-            var element = new InputElementDescription("NORMAL", 0, Format.R32G32B32_Float, _offset);
+            var element = new InputElementDescription("NORMAL", 0, Format.R32G32B32_Float, _offset, 0);
             _offset += Float96;
 
             return element;
