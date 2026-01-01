@@ -73,12 +73,6 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
         return this;
     }
 
-    public T Build<T>() where T : class, IBuildResource
-    {
-        var instnce = this as T;
-        return instnce ?? throw new TypeAccessException();
-    }
-
     public void Bind(ID3D11DeviceContext context)
     {
         context.VSSetShader(VertexShader);

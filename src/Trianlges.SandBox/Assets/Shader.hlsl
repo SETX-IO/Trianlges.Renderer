@@ -1,8 +1,12 @@
-cbuffer ModuleViewProj : register(b0)
+cbuffer ViewProj : register(b0)
 {
-    matrix module;
     matrix view;
     matrix proj;
+}
+
+cbuffer Module : register(b1)
+{
+    matrix module;
 }
 
 struct Attributes
@@ -21,10 +25,11 @@ Varyings vert(Attributes In)
 {
     Varyings Out;
 
+    matrix viewProj = mul(view, proj);
+    
     Out.position = float4(In.position, 1);
     Out.position = mul(Out.position, module);
-    Out.position = mul(Out.position, view);
-    Out.position = mul(Out.position, proj);
+    Out.position = mul(Out.position, viewProj);
 
     Out.color = float4(In.color, 1.0f);
 

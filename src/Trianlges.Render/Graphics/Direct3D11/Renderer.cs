@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Trianlges.Render.Module;
 using Vortice.Direct3D11;
 
 namespace Trianlges.Render.Graphics.Direct3D11;
@@ -11,8 +12,9 @@ public class Renderer : IRenderer
     public readonly Camera Camera;
     private readonly IDevice3D _device;
     private readonly List<DrawElement> _drawElements;
+    private readonly ID3D11DeviceContext _context;
 
-    private ID3D11Buffer? _contextBuffer;
+    private readonly ID3D11Buffer _contextBuffer;
     
     /// <summary>
     /// SRT矩阵传入前需要进行转置.
@@ -27,15 +29,25 @@ public class Renderer : IRenderer
         _drawElements = [];
 
         Camera = new Camera(new Vector3(0, 0, -2));
-        _constantData = new ConstantBufferData(Matrix4x4.Identity, Camera.View, Camera.Proj);
+        _constantData = new ConstantBufferData(Camera.View, Camera.Proj);
+        
+        var cBufferDesc = new BufferDescription(ConstantBufferData.Size, BindFlags.ConstantBuffer, ResourceUsage.Dynamic, CpuAccessFlags.Write);
+        _contextBuffer = _device.Device.CreateBuffer(cBufferDesc);
+            
+        // _context = device.Device.CreateDeferredContext();
+        _device.DContext.VSSetConstantBuffers(0, [_contextBuffer]);
     }
-
-    private const int Pos = 1;
     
     public unsafe void Updata()
     {
-
+        var context = _device.DContext;
+        
+        var map1 = context.Map(_contextBuffer, MapMode.WriteDiscard);
+        Unsafe.Copy(map1.DataPointer.ToPointer(), ref _constantData);
+        context.Unmap(_contextBuffer);
     }
+
+    private bool isA = false;
 
     public unsafe void Render()
     {
@@ -46,28 +58,31 @@ public class Renderer : IRenderer
         context.ClearRenderTargetView(renderTarget, Camera.ClearColor);
         context.ClearDepthStencilView(depthStencil, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f,
             0);
-        
-        if (_contextBuffer == null)
-        {
-            var cBufferDesc = new BufferDescription(ConstantBufferData.Size, BindFlags.ConstantBuffer, ResourceUsage.Dynamic, CpuAccessFlags.Write);
-            _contextBuffer = _device.Device.CreateBuffer(cBufferDesc);
-            
-            _device.DContext.VSSetConstantBuffers(0, [_contextBuffer]);
-        }
+
+        // _context.FinishCommandList(false, out var list);
+        // context.ExecuteCommandList(list, true);
         
         _index += 0.0002f;
-        var rotation2 = Matrix4x4.CreateRotationY(-_index);
-        var translation = Matrix4x4.CreateTranslation(0, MathF.Cos(_index), 5);
-        
-        var tModule = _drawElements[0];
-         
-        _constantData.Module = Matrix4x4.Transpose(rotation2 * translation);
-        
-        var map1 = _device.DContext.Map(_contextBuffer, MapMode.WriteDiscard);
-        Unsafe.Copy(map1.DataPointer.ToPointer(), ref _constantData);
-        _device.DContext.Unmap(_contextBuffer);
-        
-        tModule.Render(_device);
+
+        foreach (var element in _drawElements)
+        {
+            if (isA)
+            {
+                element.Transfome.SetRotation(0, _index, _index);
+                element.Transfome.SetPosition(0, MathF.Cos(_index), 5);
+            
+                element.Render(_device);
+                isA = !isA;
+                
+                return;
+            }
+            element.Transfome.SetRotation(0, -_index, _index);
+            element.Transfome.SetPosition(0, MathF.Sin(-_index), 5);
+            
+            element.Render(_device);
+            
+            isA = !isA;
+        }
     }
 
     public void AddDrawElement(DrawElement? element)

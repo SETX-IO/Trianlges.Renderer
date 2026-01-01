@@ -1,6 +1,6 @@
 using Vortice.Direct3D11;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Render.Graphics;
 
 public interface IDevice3D : IDevice
 {

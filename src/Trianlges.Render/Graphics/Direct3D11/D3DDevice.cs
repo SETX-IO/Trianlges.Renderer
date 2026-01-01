@@ -70,6 +70,17 @@ public class D3DDevice : IDevice3D, IDevice2D
 #if DEBUG
         createFlags |= DeviceCreationFlags.Debug;
 #endif
+
+        if (DXGI.CreateDXGIFactory1<IDXGIFactory1>(out var factory).Success)
+            for (uint i = 0; i < uint.MaxValue; i++)
+            {
+                factory!.EnumAdapters1(i, out var adapter);
+                if (adapter == null)
+                    break;
+                
+                var adapterInfo = adapter.Description1;
+                Console.WriteLine("Info: [ DeviceName: {0}, Flages: {1}, Memory: {2} ]", adapterInfo.Description, adapterInfo.Flags, adapterInfo.DedicatedVideoMemory);
+            }
         
         D3D11.D3D11CreateDeviceAndSwapChain(
             null, DriverType.Hardware,
@@ -112,7 +123,7 @@ public class D3DDevice : IDevice3D, IDevice2D
 
         DContext.OMSetRenderTargets([RenderTarget], DepthStencil);
 
-        _viewport = new Viewport(0, 0, bbDesc.Width, bbDesc.Height, 0, 1);
+        _viewport = new Viewport(bbDesc.Width, bbDesc.Height);
         
         DContext.RSSetViewports([_viewport]);
     }

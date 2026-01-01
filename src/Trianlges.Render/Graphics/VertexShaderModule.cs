@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Vortice.Direct3D11;
@@ -7,28 +7,40 @@ using Vortice.DXGI;
 
 namespace Trianlges.Render.Graphics;
 
-public struct Vertex(Vector3 position, Vector3 color)
+public struct Vertex
 {
-    public Vector3 Position = position;
-    public Vector3 Color = color;
+    public Vector3 Position;
+    public Vector3 Color;
+    public Vector2 Uv;
 
+    public Vertex(Vector3 position, Vector2 uv)
+    {
+        Position = position;
+        Color = Vector3.One;
+        Uv = uv;
+    }
+    
+    public Vertex(Vector3 position, Vector3 color)
+    {
+        Position = position;
+        Color = color;
+        Uv = Vector2.Zero;
+    }
+    
+    public Vertex(Vector3 position)
+    {
+        Position = position;
+        Color = Vector3.One;
+        Uv = Vector2.One;
+    }
+    
     public static readonly uint Size = (uint)Unsafe.SizeOf<Vertex>();
 }
 
-public struct VertexUv(Vector3 position, Vector2 uv)
+public struct ConstantBufferData(Matrix4x4 view, Matrix4x4 proj)
 {
-    public Vector3 Position = position;
-    public Vector2 Uv = uv;
-
-    public static readonly uint Size = (uint)Unsafe.SizeOf<VertexUv>();
-}
-
-public struct ConstantBufferData(Matrix4x4 world, Matrix4x4 view, Matrix4x4 proj)
-{
-    public Matrix4x4 Module = world;
     public Matrix4x4 View = view;
     public Matrix4x4 Proj = proj;
-
 
     public static readonly uint Size = (uint)Unsafe.SizeOf<ConstantBufferData>();
 }
@@ -47,25 +59,18 @@ public struct VertexInputElement
 {
     private static uint _offset;
     
-    public static InputElementDescription[] GetVertextElements(params VertextType[] element)
+    public static InputElementDescription[] GetVertextElements(params VertextType[] elements)
     {
-        var descs = new List<InputElementDescription>();
-        foreach (var vertextType in element)
+        var descs = elements.Select(element => element switch
         {
-            var desc = vertextType switch
-            {
-                VertextType.Position => Position,
-                VertextType.Position2 => Position2,
-                VertextType.Color3 => Color3,
-                VertextType.Color4 => Color4,
-                VertextType.Uv => Uv,
-                VertextType.Normal => Normal,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            
-            descs.Add(desc);
-        }
-
+            VertextType.Position => Position,
+            VertextType.Position2 => Position2,
+            VertextType.Color3 => Color3,
+            VertextType.Color4 => Color4,
+            VertextType.Uv => Uv,
+            VertextType.Normal => Normal,
+            _ => throw new ArgumentOutOfRangeException()
+        });
         _offset = 0;
         
         return descs.ToArray();
