@@ -6,7 +6,7 @@ using Vortice.DXGI;
 using Vortice.Mathematics;
 using Vortice.WIC;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Graphics.Direct3D11;
 
 public class Texture : ILoadTexture, IBuildResource
 {

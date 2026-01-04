@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
-namespace Trianlges.Render.Graphics;
+namespace Trianlges.Graphics;
 
 public struct Vertex
 {

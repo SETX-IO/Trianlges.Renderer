@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Trianlges.Render.Graphics.Direct2D;
+using SharpGen.Runtime;
+using Trianlges.Graphics.Direct2D;
+using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 using Vortice.Mathematics;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Graphics.Direct3D11;
 
 /// <summary>
 ///     Marager DirectX11 Device.
 /// </summary>
-public class D3DDevice : IDevice3D, IDevice2D
+public class Device3D : IDevice3D, IDevice2D
 {
+    // private readonly Lazy<Device3D> _instance = new Lazy<Device3D>(new Device3D());
+    // public Device3D Instance => _instance.Value;
+    
     private Viewport _viewport;
+    private IDXGIFactory1 _factory;
 
     /// <summary>
     ///     Default constructors.
@@ -24,7 +30,7 @@ public class D3DDevice : IDevice3D, IDevice2D
     /// Create(windowHandler);
     /// ConfigRenderTarget();
     /// </code>
-    public D3DDevice()
+    public Device3D()
     {
     }
 
@@ -38,10 +44,12 @@ public class D3DDevice : IDevice3D, IDevice2D
     /// ConfigRenderTarget();
     /// </code>
     /// <param name="windowHandler">Win32 HWND</param>
-    public D3DDevice(IntPtr windowHandler)
+    public Device3D(IntPtr windowHandler)
     {
-        Create(windowHandler);
-        ConfigRenderTarget();
+        // Create(windowHandler);
+        // ConfigRenderTarget();
+        Create();
+        CreateWindowResouce(windowHandler);
     }
 
     public ID3D11Device Device { get; protected set; } = null!;
@@ -51,10 +59,31 @@ public class D3DDevice : IDevice3D, IDevice2D
     public ID3D11RenderTargetView? RenderTarget { get; private set; }
     public ID3D11DepthStencilView? DepthStencil { get; private set; }
 
-    public void Create(IntPtr windowHandler)
+    public void Create()
     {
+        Result result = Result.Ok;
+        
         var createFlags = DeviceCreationFlags.BgraSupport;
         
+#if DEBUG
+        createFlags |= DeviceCreationFlags.Debug;
+#endif
+        DXGI.CreateDXGIFactory1<IDXGIFactory6>(out var factory);
+        factory!.EnumAdapterByGpuPreference(0, GpuPreference.HighPerformance, out IDXGIAdapter? adapter);
+
+        _factory = factory;
+        
+        result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out var device, out _, out var context);
+        
+        if (!result.Success)
+            throw new COMException();
+
+        Device = device;
+        DContext = context;
+    }
+
+    public void CreateWindowResouce(IntPtr windowHandler)
+    {
         var swDesc = new SwapChainDescription
         {
             BufferCount = 1,
@@ -67,41 +96,21 @@ public class D3DDevice : IDevice3D, IDevice2D
             SampleDescription = new SampleDescription(1, 0),
             Windowed = true
         };
-#if DEBUG
-        createFlags |= DeviceCreationFlags.Debug;
-#endif
-
-        if (DXGI.CreateDXGIFactory1<IDXGIFactory1>(out var factory).Success)
-            for (uint i = 0; i < uint.MaxValue; i++)
-            {
-                factory!.EnumAdapters1(i, out var adapter);
-                if (adapter == null)
-                    break;
-                
-                var adapterInfo = adapter.Description1;
-                Console.WriteLine("Info: [ DeviceName: {0}, Flages: {1}, Memory: {2} ]", adapterInfo.Description, adapterInfo.Flags, adapterInfo.DedicatedVideoMemory);
-            }
         
-        D3D11.D3D11CreateDeviceAndSwapChain(
-            null, DriverType.Hardware,
-            createFlags, [],
-            swDesc, out var sw,
-            out var device, out _,
-            out var context).CheckError();
-
-        if (device == null && context == null && sw == null)
-            throw new COMException();
-
-        Device = device!;
-        DContext = context!;
-        SwapChain = sw!;
+        SwapChain = _factory.CreateSwapChain(Device, swDesc);
+        
+        ConfigRenderTarget();
     }
     
     public void ResetSize(uint width, uint hieght)
     {
         if (width == 0 || hieght == 0) return;
         
-        SwapChain.ResizeBuffers(1, width, hieght, Format.B8G8R8A8_UNorm);
+        var res = SwapChain.ResizeBuffers(1, width, hieght, Format.B8G8R8A8_UNorm);
+        
+        if (!res.Success)
+            return;
+        
         RenderTarget?.Release();
         DepthStencil?.Release();
         
@@ -112,15 +121,14 @@ public class D3DDevice : IDevice3D, IDevice2D
     {
         var backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
         RenderTarget = Device.CreateRenderTargetView(backBuffer);
+        
         var bbDesc = backBuffer.Description;
-
         var depthDesc = new Texture2DDescription(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1,
             BindFlags.DepthStencil);
         var depthViewDesc = new DepthStencilViewDescription(DepthStencilViewDimension.Texture2D);
 
         var depthBuffer = Device.CreateTexture2D(depthDesc);
         DepthStencil = Device.CreateDepthStencilView(depthBuffer, depthViewDesc);
-
         DContext.OMSetRenderTargets([RenderTarget], DepthStencil);
 
         _viewport = new Viewport(bbDesc.Width, bbDesc.Height);
@@ -128,5 +136,17 @@ public class D3DDevice : IDevice3D, IDevice2D
         DContext.RSSetViewports([_viewport]);
     }
 
+    public BufferDx11<T> NewBuffer<T>(BindFlags bufferType, T[]? data = null, bool isDyamic = false) where T : unmanaged
+    {
+        var buffer = new BufferDx11<T>(Device, bufferType, data, isDyamic);
+        return buffer;
+    }
+
+    public void Clear()
+    {
+        DContext.ClearRenderTargetView(RenderTarget, Camera.ClearColor);
+        DContext.ClearDepthStencilView(DepthStencil, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f, 0);
+    }
+    
     public void Present() => SwapChain.Present(0, PresentFlags.None);
 }

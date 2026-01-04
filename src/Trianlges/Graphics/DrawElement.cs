@@ -1,14 +1,18 @@
-using System.Runtime.CompilerServices;
-using Trianlges.Render.Graphics.Direct3D11;
-using Trianlges.Render.Module;
+using System.Numerics;
+using Trianlges.Graphics.Direct3D11;
+using Trianlges.Module;
+using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
-using Vortice.DXGI;
 
-namespace Trianlges.Render.Graphics;
+namespace Trianlges.Graphics;
 
 public abstract class DrawElement
 {
+    protected BufferDx11<Vertex> _vBuffer;
+    protected BufferDx11<uint> _iBuffer;
+    protected BufferDx11<Matrix4x4> _cBuffer;
+    
     public ID3D11Buffer VertextBuffer { get; protected set; } = null!;
     public ID3D11Buffer? IndexBuffer { get; protected set; }
     public Material? Material { get; set; }
@@ -16,6 +20,8 @@ public abstract class DrawElement
     
     protected ID3D11Buffer _contextBuffer;
 
+    protected bool init = true;
+    
     protected uint IndexCount = 0;
     
     public void Init(ID3D11Buffer vertexBffer, ID3D11Buffer indexBffer)
@@ -24,11 +30,9 @@ public abstract class DrawElement
         IndexBuffer = indexBffer;
     }
 
-    public virtual unsafe void Render(IDevice3D device)
+    public virtual void Render(Device3D device)
     {
         var context = device.DContext;
-        var stride = Vertex.Size;
-        uint offset = 0;
 
         Material ??= Material.Create(device)
             .SetShader("Assets/Default.hlsl",
@@ -36,18 +40,15 @@ public abstract class DrawElement
             .ConfigRasterizer(false, true)
             .Build<Material>();
         
-        context.VSSetConstantBuffers(1, [_contextBuffer]);
+        _cBuffer.Updata(context, [Transfome.WorldMat], 1);
         
-        var map = context.Map(_contextBuffer, MapMode.WriteDiscard);
-        var worldMat = Transfome.WorldMat;
-        Unsafe.Copy(map.DataPointer.ToPointer(), ref worldMat);
-        context.Unmap(_contextBuffer);
-
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
         
         Material.Bind(context, 0);
-        context.IASetVertexBuffers(0, 1, [VertextBuffer], [stride], [offset]);
-        context.IASetIndexBuffer(IndexBuffer, Format.R32_UInt, 0);
+        
+        _vBuffer.Bind(context);
+        _iBuffer.Bind(context);
+        
         context.DrawIndexed(IndexCount, 0, 0);
     }
 }

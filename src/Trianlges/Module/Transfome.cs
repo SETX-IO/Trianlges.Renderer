@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace Trianlges.Render.Module;
+namespace Trianlges.Module;
 
 public class Transfome
 {

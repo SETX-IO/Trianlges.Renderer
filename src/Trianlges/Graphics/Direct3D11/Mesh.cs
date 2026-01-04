@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Vortice;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Graphics.Direct3D11;
 
 public class Mesh : DrawElement
 {
@@ -87,32 +87,20 @@ public class Mesh : DrawElement
         IndexCount = (uint)indiecs.Length;
     }
 
-    private void CreateRenderResouces(ID3D11Device device)
+    private void CreateRenderResouces(Device3D device3d)
     {
-        var vBufferDesc =
-            new BufferDescription((uint)(_vertices.Length * Vertex.Size), BindFlags.VertexBuffer,
-                ResourceUsage.Immutable);
-
-        var vData = DataStream.Create(_vertices, true, true);
-        VertextBuffer = device.CreateBuffer(vBufferDesc, vData);
-
-        var cBufferDesc = new BufferDescription((uint)Unsafe.SizeOf<Matrix4x4>(), BindFlags.ConstantBuffer,
-            ResourceUsage.Dynamic, CpuAccessFlags.Write);
-        _contextBuffer = device.CreateBuffer(cBufferDesc);
+        _vBuffer = device3d.NewBuffer(BindFlags.VertexBuffer, _vertices);
+        _iBuffer = device3d.NewBuffer(BindFlags.IndexBuffer, _indiecs);
+        _cBuffer = device3d.NewBuffer<Matrix4x4>(BindFlags.ConstantBuffer, isDyamic: true);
         
-        var iBufferDesc =
-            new BufferDescription((uint)(_indiecs.Length * sizeof(uint)), BindFlags.IndexBuffer,
-                ResourceUsage.Immutable);
-
-        var iData = DataStream.Create(_indiecs, true, true);
-        IndexBuffer = device.CreateBuffer(iBufferDesc, iData);
+        init = !init;
     }
 
-    public override void Render(IDevice3D device)
+    public override void Render(Device3D device)
     {
-        if (IndexBuffer == null)
+        if (init)
         {
-            CreateRenderResouces(device.Device);
+            CreateRenderResouces(device);
         }
 
         base.Render(device);

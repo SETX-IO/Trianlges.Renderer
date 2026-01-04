@@ -1,22 +1,21 @@
 ﻿using System;
-using Trianlges.Render.Graphics;
-using Trianlges.Render.Graphics.Direct3D11;
+using Trianlges.Graphics;
+using Trianlges.Graphics.Direct3D11;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Render;
+namespace Trianlges;
 
 public class GameApp : Application
 {
-    private readonly D3DDevice _device;
+    private readonly Device3D _device;
     private readonly IRenderer _renderer;
     // private readonly IRenderer _d2DRenderer;
 
     public GameApp(Window mainWindow, string[] args) : base(mainWindow, args)
     {
-        _device = new D3DDevice(MainWindow.Win32Handler);
+        _device = new Device3D(MainWindow.Win32Handler);
         
         _renderer = new Graphics.Direct3D11.Renderer(_device);
-
         // var d2dRender = new Graphics.Direct2D.Renderer(_device);
         // d2dRender.Init();
         //
@@ -45,7 +44,7 @@ public class GameApp : Application
                 .ConfigRasterizer(false, true)
                 .Build<Material>();
 
-        if (_renderer is not Renderer renderer) return;
+        if (_renderer is not Graphics.Direct3D11.Renderer renderer) return;
         
         renderer.AddDrawElement(trianlgeModule);
         renderer.AddDrawElement(quadilateralModule);
@@ -61,7 +60,7 @@ public class GameApp : Application
     {
         Window.AspectRatio = (float)width / height;
         
-        if (_renderer is Renderer renderer)
+        if (_renderer is Graphics.Direct3D11.Renderer renderer)
             renderer.Camera.Updata();
         
         _device.ResetSize((uint)width, (uint)height);

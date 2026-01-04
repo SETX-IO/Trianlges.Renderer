@@ -3,7 +3,7 @@ using System.IO;
 using Vortice.Direct3D11;
 using Vortice.D3DCompiler;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Graphics.Direct3D11;
 
 public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
 {
@@ -26,8 +26,13 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
     
     private ReadOnlyMemory<byte> CompilerShader(string shaderPath, string entryPoint, string profile)
     {
-        string path;
         ReadOnlyMemory<byte> shaderCode;
+
+#if DEBUG
+        shaderCode = Compiler.CompileFromFile(shaderPath, entryPoint, profile);
+#else
+
+        string path;
         var cacheFile = $"{entryPoint}_{Path.GetFileNameWithoutExtension(shaderPath)}.psv";
         
         try
@@ -48,8 +53,7 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
             stream.Write(shaderCode.Span);
         }
         else shaderCode = File.ReadAllBytes(path);
-        
-        
+#endif
         return shaderCode;
     }
 
@@ -57,6 +61,19 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
     {
         var vCode = CompilerShader(shaderPath, "vert", "vs_5_0");
         var pCode = CompilerShader(shaderPath, "frag", "ps_5_0");
+
+        _vertextShaderCode = vCode;
+        
+        VertexShader = _refDevice.CreateVertexShader(vCode.Span);
+        PixelShader = _refDevice.CreatePixelShader(pCode.Span);
+
+        return this;
+    }
+
+    public IConfigShader Complier(string vShader, string pShader)
+    {
+        var vCode = CompilerShader(vShader, "vert", "vs_5_0");
+        var pCode = CompilerShader(pShader, "frag", "ps_5_0");
 
         _vertextShaderCode = vCode;
         
@@ -85,6 +102,11 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
 public interface ICompilerShader
 {
     IConfigShader Complier(string shaderPath)
+    {
+        throw new NotImplementedException();
+    }
+    
+    IConfigShader Complier(string vShader, string pShader)
     {
         throw new NotImplementedException();
     }

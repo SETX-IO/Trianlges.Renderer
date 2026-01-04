@@ -5,7 +5,7 @@ using Vortice.DXGI;
 using Vortice.Mathematics;
 using AlphaMode = Vortice.DCommon.AlphaMode;
 
-namespace Trianlges.Render.Graphics.Direct2D;
+namespace Trianlges.Graphics.Direct2D;
 
 public class Renderer : IRenderer
 {

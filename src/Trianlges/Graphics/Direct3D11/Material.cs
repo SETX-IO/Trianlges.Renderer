@@ -1,7 +1,7 @@
 using System;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Render.Graphics.Direct3D11;
+namespace Trianlges.Graphics.Direct3D11;
 
 public class Material : IConfigMaterial, IBuildResource
 {
@@ -54,7 +54,6 @@ public class Material : IConfigMaterial, IBuildResource
 
         return this;
     }
-
     
     public IBuildResource ConfigRasterizer(bool isFaceCull, bool isFill)
     {

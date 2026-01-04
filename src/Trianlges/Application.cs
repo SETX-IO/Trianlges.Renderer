@@ -1,4 +1,4 @@
-﻿namespace Trianlges.Render;
+﻿namespace Trianlges;
 
 public abstract class Application
 {
