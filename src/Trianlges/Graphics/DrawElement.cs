@@ -3,7 +3,6 @@ using Trianlges.Graphics.Direct3D11;
 using Trianlges.Module;
 using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D;
-using Vortice.Direct3D11;
 
 namespace Trianlges.Graphics;
 
@@ -13,22 +12,11 @@ public abstract class DrawElement
     protected BufferDx11<uint> _iBuffer;
     protected BufferDx11<Matrix4x4> _cBuffer;
     
-    public ID3D11Buffer VertextBuffer { get; protected set; } = null!;
-    public ID3D11Buffer? IndexBuffer { get; protected set; }
-    public Material? Material { get; set; }
-    public readonly Transfome Transfome = new ();
-    
-    protected ID3D11Buffer _contextBuffer;
-
-    protected bool init = true;
-    
+    protected bool IsInit = false;
     protected uint IndexCount = 0;
     
-    public void Init(ID3D11Buffer vertexBffer, ID3D11Buffer indexBffer)
-    {
-        VertextBuffer = vertexBffer;
-        IndexBuffer = indexBffer;
-    }
+    public Material? Material { get; set; }
+    public readonly Transfome Transfome = new ();
 
     public virtual void Render(Device3D device)
     {

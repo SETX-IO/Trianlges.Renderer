@@ -74,10 +74,21 @@ public class Device3D : IDevice3D, IDevice2D
         _factory = factory;
         
         result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out var device, out _, out var context);
-        
-        if (!result.Success)
-            throw new COMException();
 
+        try
+        {
+            if (!result.Success)
+                throw new COMException();
+        }
+        catch (COMException)
+        {
+            Console.WriteLine("[Wirring] You cat'n enable debug layer because you haver't installed the DirectX debugger Tools.");
+            createFlags ^= DeviceCreationFlags.Debug;
+            
+            result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out device, out _, out context);
+            if (!result.Success) throw;
+        }
+        
         Device = device;
         DContext = context;
     }
@@ -140,6 +151,12 @@ public class Device3D : IDevice3D, IDevice2D
     {
         var buffer = new BufferDx11<T>(Device, bufferType, data, isDyamic);
         return buffer;
+    }
+
+    public TextureDx11 NewTexture(string textureName)
+    {
+        var texture =  new TextureDx11(Device, textureName);
+        return texture;
     }
 
     public void Clear()

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using Vortice;
+﻿using System.Numerics;
 using Vortice.Direct3D11;
 
 namespace Trianlges.Graphics.Direct3D11;
@@ -93,12 +90,12 @@ public class Mesh : DrawElement
         _iBuffer = device3d.NewBuffer(BindFlags.IndexBuffer, _indiecs);
         _cBuffer = device3d.NewBuffer<Matrix4x4>(BindFlags.ConstantBuffer, isDyamic: true);
         
-        init = !init;
+        IsInit = !IsInit;
     }
 
     public override void Render(Device3D device)
     {
-        if (init)
+        if (!IsInit)
         {
             CreateRenderResouces(device);
         }

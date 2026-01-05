@@ -1,8 +1,6 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Trianlges.Module;
 using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D11;
 
@@ -10,20 +8,17 @@ namespace Trianlges.Graphics.Direct3D11;
 
 public class Renderer : IRenderer
 {
-    public readonly Camera Camera;
-    private readonly Device3D _device;
-    private readonly List<DrawElement> _drawElements;
-    // private readonly ID3D11DeviceContext _context;
-
-    private readonly ID3D11Buffer _contextBuffer;
-    private readonly BufferDx11<ConstantBufferData> _cBuffer;
-    
     /// <summary>
     /// SRT矩阵传入前需要进行转置.
     /// </summary>
     private ConstantBufferData _constantData;
-
     private float _index;
+    private readonly Device3D _device;
+    private readonly List<DrawElement> _drawElements;
+    private readonly BufferDx11<ConstantBufferData> _cBuffer;
+    
+    public readonly Camera Camera;
+    
 
     public Renderer(Device3D device)
     {
@@ -52,7 +47,7 @@ public class Renderer : IRenderer
         // _context.FinishCommandList(false, out var list);
         // context.ExecuteCommandList(list, true);
         
-        _index += 0.0002f;
+        _index += Time.DetalTime * 2.75f;
 
         foreach (var element in _drawElements)
         {
