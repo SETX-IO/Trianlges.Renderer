@@ -17,6 +17,8 @@ public abstract class Application
 
         while (!MainWindow.IsClose)
         {
+            Time.Update();
+            
             Render();
 
             MainWindow.DispatchMessage();

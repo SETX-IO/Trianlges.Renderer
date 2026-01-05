@@ -33,7 +33,7 @@ public class GameApp : Application
                 .SetShader("Assets/TextureShader.hlsl",
                     VertexInputElement.GetVertextElements(VertextType.Position, VertextType.Color3, VertextType.Uv))
                 .SetTexture("Assets/image.jpg")
-                .ConfigRasterizer(false, false)
+                .ConfigRasterizer(false, true)
                 .Build<Material>();
         
         var quadilateralModule = Mesh.Cube;
@@ -44,10 +44,13 @@ public class GameApp : Application
                 .ConfigRasterizer(false, true)
                 .Build<Material>();
 
+        var module = Mesh.Trianlge;
+        
         if (_renderer is not Graphics.Direct3D11.Renderer renderer) return;
         
         renderer.AddDrawElement(trianlgeModule);
         renderer.AddDrawElement(quadilateralModule);
+        renderer.AddDrawElement(module);
     }
 
     private void TryCatchException(object sender, UnhandledExceptionEventArgs e)

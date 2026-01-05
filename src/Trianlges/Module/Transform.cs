@@ -2,10 +2,10 @@ using System.Numerics;
 
 namespace Trianlges.Module;
 
-public class Transfome
+public class Transform
 {
-    public Transfome() {}
-    public Transfome(Vector3 scale, Vector3 rotation, Vector3 position)
+    public Transform() {}
+    public Transform(Vector3 scale, Vector3 rotation, Vector3 position)
     {
         Scale = scale;
         Rotation = rotation;

@@ -1,6 +1,6 @@
 using System;
-using System.Runtime.CompilerServices;
 using SharpGen.Runtime;
+using System.Runtime.CompilerServices;
 using Vortice;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
@@ -39,31 +39,26 @@ public class BufferDx11<T> where T : unmanaged
 
     public unsafe void Updata(ID3D11DeviceContext context, T[] data, uint slot = 0, ShaderType type = ShaderType.Vertex)
     {
-        if (_bufferType is BindFlags.VertexBuffer or BindFlags.IndexBuffer)
+        switch (_bufferType)
         {
-            Bind(context, slot);
-        }
-        else if (_bufferType is BindFlags.ConstantBuffer)
-        {
-            SetConstantBuffer(context, type, slot);
-        }
-        else
-        {
-            throw new ArgumentException($"{nameof(_bufferType)} is not buffer Type.");
-        }
-        
-        if (_isDyamic)
-        {
-            MappedSubresource map = context.Map(_buffer, MapMode.WriteDiscard);
-            
-            Unsafe.Copy(map.DataPointer.ToPointer(), ref data.GetReferenceUnsafe());
-            
-            context.Unmap(_buffer);
-            
-            return;
+            case BindFlags.VertexBuffer or BindFlags.IndexBuffer:
+                Bind(context, slot);
+                break;
+            case BindFlags.ConstantBuffer:
+                SetConstantBuffer(context, type, slot);
+                break;
+            default:
+                throw new ArgumentException($"{nameof(_bufferType)} is not buffer Type.");
         }
         
-        context.UpdateSubresource(data, _buffer);
+        if (!_isDyamic)
+            context.UpdateSubresource(data, _buffer);
+        
+        MappedSubresource map = context.Map(_buffer, MapMode.WriteDiscard);
+            
+        Unsafe.Copy(map.DataPointer.ToPointer(), ref data.GetReferenceUnsafe());
+            
+        context.Unmap(_buffer);
     }
 
     public void Bind(ID3D11DeviceContext context, uint slot = 0)
@@ -101,22 +96,12 @@ public class BufferDx11<T> where T : unmanaged
             case ShaderType.Geometry:
                 context.GSSetConstantBuffer(slot, _buffer);
                 break;
-            case ShaderType.Piexl:
+            case ShaderType.Pixel:
                 context.PSSetConstantBuffer(slot, _buffer);
                 break;
             case ShaderType.Compute:
                 context.CSSetConstantBuffer(slot, _buffer);
                 break;
         }
-    }
-    
-    public enum ShaderType
-    {
-        Vertex,
-        Hell,
-        Domain,
-        Geometry,
-        Piexl,
-        Compute
     }
 }

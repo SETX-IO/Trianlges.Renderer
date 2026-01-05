@@ -1,93 +1,52 @@
 using System;
 using System.Linq;
-using Vortice.Direct3D;
-using Vortice.Direct3D11;
 using Vortice.DXGI;
 using Vortice.Mathematics;
 using Vortice.WIC;
 
-namespace Trianlges.Graphics.Direct3D11;
+namespace Trianlges.Renderer.Backend.Direct3D11;
 
-public class Texture : ILoadTexture, IBuildResource
+public class UtiltDx
 {
-    private static IWICImagingFactory WicFactory { get; } = new();
-    
-    private readonly ID3D11Device _refDevice;
-    
-    private ID3D11ShaderResourceView _textureView = null!;
+    public static IWICImagingFactory WicFactory { get; } = new();
 
-    private Texture(ID3D11Device device)
+    public static IWICFormatConverter CreateConverterFrame(IWICBitmapFrameDecode frameDecode, Guid srcFormat, out Format dxgiFormat, out bool isCanConvert)
     {
-        _refDevice = device;
-    }
-    
-    public static ILoadTexture Create(ID3D11Device device)
-    {
-        var instance = new Texture(device);
-        return instance;
-    }
+        IWICFormatConverter converter = WicFactory.CreateFormatConverter();
+        dxgiFormat = PixleFormatToDxgiFormat(frameDecode.PixelFormat);
+        isCanConvert = false;
 
-    public IBuildResource LoadFormFile(string fileName)
-    {
-        if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException($"{nameof(fileName)} is null or empty.");
+        if (dxgiFormat != Format.Unknown) return converter;
         
-        var decoder = WicFactory.CreateDecoderFromFileName(fileName);
-        var frameDecode = decoder.GetFrame(0);
- 
-        var format = PixleFormatToDxgiFormat(frameDecode.PixelFormat);
-
-        bool isConvert = false;
-        var converter = WicFactory.CreateFormatConverter();
-        if (format == Format.Unknown)
-        {
-            var convertFormat = GetConvertFormat(frameDecode.PixelFormat);
-            if (convertFormat == PixelFormat.FormatDontCare)
-                throw new NotSupportedException($"\"{fileName}\" image format is not support.");
-            
-            format = PixleFormatToDxgiFormat(convertFormat);
-            bool canConvert = converter.CanConvert(frameDecode.PixelFormat, convertFormat);
-            if (canConvert)
-            {
-                converter.Initialize(frameDecode, convertFormat);
-            }
-
-            isConvert = canConvert;
-        }
+        Guid format = GetConvertFormat(srcFormat);
         
-        var frameSize = frameDecode.Size;
-        var bbp = DxgiFormatTobbp(format);
-        var rowbytes = frameSize.Width * bbp / 8;
-        var numBytes = rowbytes * frameSize.Height;
-        
-        var textureCode = new byte[numBytes];
-        frameDecode.CopyPixels(new RectI(frameSize.Width, frameSize.Height), (uint)rowbytes, textureCode);
+        if (format == PixelFormat.FormatDontCare)
+            throw new NotSupportedException($"\"{frameDecode}\" image format is not support.");
 
-        if (isConvert)
-        {
-            converter.CopyPixels(new RectI(frameSize.Width, frameSize.Height), (uint)rowbytes, textureCode);
-        }
-        else
-        {
-            frameDecode.CopyPixels(new RectI(frameSize.Width, frameSize.Height), (uint)rowbytes, textureCode);
-        }
-
-
-        var desc = new Texture2DDescription(format, (uint)frameSize.Width, (uint)frameSize.Height, 1, 1);
-        var texture = _refDevice.CreateTexture2D(desc);
-        _refDevice.ImmediateContext.UpdateSubresource(textureCode, texture);
+        dxgiFormat = PixleFormatToDxgiFormat(format);
         
-        var srvDesc = new ShaderResourceViewDescription(ShaderResourceViewDimension.Texture2D, format);
-        _textureView = _refDevice.CreateShaderResourceView(texture, srvDesc);
-        
-        return this;
+        isCanConvert = converter.CanConvert(frameDecode.PixelFormat, format);
+        if (isCanConvert)
+            converter.Initialize(frameDecode, format);
+
+        return converter;
     }
 
-    public void BindTexture(ID3D11DeviceContext context, uint slot)
+    public static uint GetFrameDecodeRowBytes(IWICBitmapFrameDecode frameDecode, Format dxgiFormat, out RectI rect, out byte[] pixels)
     {
-        context.PSSetShaderResource(slot, _textureView);
+        SizeI frameSize = frameDecode.Size;
+        int bbp = DxgiFormatTobbp(dxgiFormat);
+        int rowBytes = frameSize.Width * bbp / 8;
+        int numBytes = rowBytes * frameSize.Height;
+
+        pixels = new byte[numBytes];
+        
+        rect = new RectI(frameSize.Width, frameSize.Height);
+        
+        return (uint)rowBytes;
     }
-    
-    private Format PixleFormatToDxgiFormat(Guid pixelFormat)
+
+    private static Format PixleFormatToDxgiFormat(Guid pixelFormat)
     {
         (Guid pixelFormat, Format dxgiFormat)[] toArray =
         [
@@ -112,7 +71,7 @@ public class Texture : ILoadTexture, IBuildResource
         return (from fmt in toArray where pixelFormat == fmt.pixelFormat select fmt.dxgiFormat).FirstOrDefault();
     }
 
-    private Guid GetConvertFormat(Guid sourceFormat)
+    private static Guid GetConvertFormat(Guid sourceFormat)
     {
         (Guid source, Guid target)[] converts =
         [
@@ -179,7 +138,7 @@ public class Texture : ILoadTexture, IBuildResource
         return  PixelFormat.FormatDontCare;
     }
 
-    private int DxgiFormatTobbp(Format dxgiFormat) => dxgiFormat switch
+    private static int DxgiFormatTobbp(Format dxgiFormat) => dxgiFormat switch
     {
         Format.R32G32B32A32_Float => 128,
         Format.R16G16B16A16_Float or Format.R16G16B16A16_UNorm => 64,
@@ -189,17 +148,4 @@ public class Texture : ILoadTexture, IBuildResource
         Format.R8_UNorm or Format.A8_UNorm => 8,
         _ => throw new ArgumentOutOfRangeException(nameof(dxgiFormat), dxgiFormat, null)
     };
-}
-
-public interface ILoadTexture
-{
-    IBuildResource LoadFormFile(string fileName)
-    {
-        throw new NotImplementedException();
-    }
-
-    IBuildResource LoadFormStream()
-    {
-        throw new NotImplementedException();
-    }
 }
