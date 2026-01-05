@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Runtime.Versioning;
 using GLFW;
 
-namespace Trianlges.Render;
+namespace Trianlges;
 
 public class Window : IDisposable
 {

@@ -11,11 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Trianlges.Render\Trianlges.Render.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Folder Include="Assets\"/>
+        <ProjectReference Include="..\Trianlges\Trianlges.csproj" />
     </ItemGroup>
 
     <ItemGroup>

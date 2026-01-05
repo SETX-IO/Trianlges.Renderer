@@ -5,8 +5,9 @@ Ti is use DirectX3D or Vulkan or OpenGl Build's Render engine.
 
 - Gorls
 
--[x] Renderer solidcolor window.
--[x] Draw three color tranlge.
+- [x] Renderer solidcolor window.
+- [x] Draw three color tranlge.
+- [x] Apply Texture On face.
 
 ## using Tools
 [RenderDoc](https://renderdoc.org/) D3D11 Debug tool.

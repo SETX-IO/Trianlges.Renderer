@@ -12,13 +12,11 @@ cbuffer Module : register(b1)
 struct Attributes
 {
     float3 position : POSITION;
-    float3 color : COLOR0;
 };
 
 struct Varyings
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR0;
 };
 
 Varyings vert(Attributes In)
@@ -30,13 +28,11 @@ Varyings vert(Attributes In)
     Out.position = float4(In.position, 1);
     Out.position = mul(Out.position, module);
     Out.position = mul(Out.position, viewProj);
-
-    Out.color = float4(In.color, 1.0f);
-
+    
     return Out;
 }
 
 float4 frag(Varyings In) : SV_Target
 {
-    return In.color;
+    return float4(0.8f, 0.8f, 0.8f, 1);
 }

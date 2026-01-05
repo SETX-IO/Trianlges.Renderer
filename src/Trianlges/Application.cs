@@ -1,4 +1,4 @@
-﻿namespace Trianlges.Render;
+﻿namespace Trianlges;
 
 public abstract class Application
 {
@@ -17,6 +17,8 @@ public abstract class Application
 
         while (!MainWindow.IsClose)
         {
+            Time.Update();
+            
             Render();
 
             MainWindow.DispatchMessage();

@@ -13,12 +13,13 @@ struct Attributes
 {
     float3 position : POSITION;
     float3 color : COLOR0;
+    float2 uv : TEXCOORD0;
 };
 
 struct Varyings
 {
     float4 position : SV_POSITION;
-    float4 color : COLOR0;
+    float2 uv : TEXCOORD0;
 };
 
 Varyings vert(Attributes In)
@@ -31,12 +32,15 @@ Varyings vert(Attributes In)
     Out.position = mul(Out.position, module);
     Out.position = mul(Out.position, viewProj);
 
-    Out.color = float4(In.color, 1.0f);
+    Out.uv = In.uv;
 
     return Out;
 }
 
+Texture2D tex : register(t0);
+SamplerState samLineear : register(s0);
+
 float4 frag(Varyings In) : SV_Target
 {
-    return In.color;
+    return tex.Sample(samLineear, In.uv);
 }

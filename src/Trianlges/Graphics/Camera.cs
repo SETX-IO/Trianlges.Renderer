@@ -1,13 +1,13 @@
 ﻿using System.Numerics;
 using Vortice.Mathematics;
 
-namespace Trianlges.Render.Graphics;
+namespace Trianlges.Graphics;
 
 public class Camera
 {
     private int _fov;
     private Vector3 _pos;
-    private Color _clearColor = new(0, 50, 100);
+    private static Color _clearColor = new(0, 50, 100);
 
     public Camera(Vector3 pos, int fov = 45)
     {
@@ -41,7 +41,7 @@ public class Camera
         }
     }
 
-    public Color ClearColor
+    public static Color ClearColor
     {
         get => _clearColor;
         set
