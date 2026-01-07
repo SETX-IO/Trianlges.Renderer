@@ -1,4 +1,6 @@
-﻿namespace Trianlges;
+﻿using System.Drawing;
+
+namespace Trianlges;
 
 public abstract class Application
 {
@@ -17,10 +19,13 @@ public abstract class Application
 
         while (!MainWindow.IsClose)
         {
-            Time.Update();
+            if (MainWindow.Size != Size.Empty)
+            {
+                Time.Update();
             
-            Render();
-
+                Render();
+            }
+            
             MainWindow.DispatchMessage();
         }
 

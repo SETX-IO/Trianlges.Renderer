@@ -15,11 +15,9 @@ namespace Trianlges.Graphics.Direct3D11;
 /// </summary>
 public class Device3D : IDevice3D, IDevice2D
 {
-    // private readonly Lazy<Device3D> _instance = new Lazy<Device3D>(new Device3D());
-    // public Device3D Instance => _instance.Value;
-    
+    private readonly IDXGIFactory1 _factory;
     private Viewport _viewport;
-    private IDXGIFactory1 _factory;
+    private ID3D11Texture2D _depthStencil;
 
     /// <summary>
     ///     Default constructors.
@@ -27,39 +25,10 @@ public class Device3D : IDevice3D, IDevice2D
     /// <code>
     /// // You or use Code.
     /// // windowHandler is win32 HWND.
-    /// Create(windowHandler);
-    /// ConfigRenderTarget();
+    /// Device3D device = new Device3D();
+    /// device.CreateWindowResource(windowHandler)
     /// </code>
     public Device3D()
-    {
-    }
-
-    /// <summary>
-    ///     Create constructors.
-    /// </summary>
-    /// <code>
-    /// // You or use Code.
-    /// // windowHandler is win32 HWND.
-    /// Create(windowHandler);
-    /// ConfigRenderTarget();
-    /// </code>
-    /// <param name="windowHandler">Win32 HWND</param>
-    public Device3D(IntPtr windowHandler)
-    {
-        // Create(windowHandler);
-        // ConfigRenderTarget();
-        Create();
-        CreateWindowResouce(windowHandler);
-    }
-
-    public ID3D11Device Device { get; protected set; } = null!;
-    public ID3D11DeviceContext DContext { get; private set; } = null!;
-
-    public IDXGISwapChain SwapChain { get; private set; } = null!;
-    public ID3D11RenderTargetView? RenderTarget { get; private set; }
-    public ID3D11DepthStencilView? DepthStencil { get; private set; }
-
-    public void Create()
     {
         Result result = Result.Ok;
         
@@ -82,7 +51,7 @@ public class Device3D : IDevice3D, IDevice2D
         }
         catch (COMException)
         {
-            Console.WriteLine("[Wirring] You cat'n enable debug layer because you haver't installed the DirectX debugger Tools.");
+            Console.WriteLine("[Wirring] You can't enable debug layer because you haver't installed the DirectX debugger Tools.");
             createFlags ^= DeviceCreationFlags.Debug;
             
             result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out device, out _, out context);
@@ -91,9 +60,37 @@ public class Device3D : IDevice3D, IDevice2D
         
         Device = device;
         DContext = context;
+
+        RenderPipeLine = new RenderPipeLineDx11(device);
     }
 
-    public void CreateWindowResouce(IntPtr windowHandler)
+    /// <summary>
+    ///     Create constructors.
+    /// </summary>
+    /// <code>
+    /// // You or use Code.
+    /// // windowHandler is win32 HWND.
+    /// Device3D device = new Device3D();
+    /// device.CreateWindowResource(windowHandler)
+    /// </code>
+    /// <param name="windowHandler">Win32 HWND</param>
+    public Device3D(IntPtr windowHandler) : this()
+    {
+        // Create(windowHandler);
+        // ConfigRenderTarget();
+        CreateWindowResource(windowHandler);
+    }
+
+    public ID3D11Device Device { get; }
+    public ID3D11DeviceContext DContext { get; }
+
+    public RenderPipeLineDx11 RenderPipeLine { get; protected set; }
+
+    public IDXGISwapChain SwapChain { get; private set; } = null!;
+    public ID3D11RenderTargetView? RenderTarget { get; private set; }
+    public ID3D11DepthStencilView? DepthStencil { get; private set; }
+
+    public void CreateWindowResource(IntPtr windowHandler)
     {
         var swDesc = new SwapChainDescription
         {
@@ -113,11 +110,11 @@ public class Device3D : IDevice3D, IDevice2D
         ConfigRenderTarget();
     }
     
-    public void ResetSize(uint width, uint hieght)
+    public void ResetSize(uint width, uint height)
     {
-        if (width == 0 || hieght == 0) return;
+        if (width == 0 || height == 0) return;
         
-        var res = SwapChain.ResizeBuffers(1, width, hieght, Format.B8G8R8A8_UNorm);
+        var res = SwapChain.ResizeBuffers(1, width, height, Format.B8G8R8A8_UNorm);
         
         if (!res.Success)
             return;
@@ -130,16 +127,16 @@ public class Device3D : IDevice3D, IDevice2D
 
     public void ConfigRenderTarget()
     {
-        var backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
+        ID3D11Texture2D backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
         RenderTarget = Device.CreateRenderTargetView(backBuffer);
         
-        var bbDesc = backBuffer.Description;
-        var depthDesc = new Texture2DDescription(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1,
-            BindFlags.DepthStencil);
+        Texture2DDescription bbDesc = backBuffer.Description;
+        
+        Texture2DDescription depthDesc = new(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1, BindFlags.DepthStencil);
+        _depthStencil = Device.CreateTexture2D(depthDesc);
+        
         var depthViewDesc = new DepthStencilViewDescription(DepthStencilViewDimension.Texture2D);
-
-        var depthBuffer = Device.CreateTexture2D(depthDesc);
-        DepthStencil = Device.CreateDepthStencilView(depthBuffer, depthViewDesc);
+        DepthStencil = Device.CreateDepthStencilView(_depthStencil, depthViewDesc);
         DContext.OMSetRenderTargets([RenderTarget], DepthStencil);
 
         _viewport = new Viewport(bbDesc.Width, bbDesc.Height);
@@ -147,9 +144,16 @@ public class Device3D : IDevice3D, IDevice2D
         DContext.RSSetViewports([_viewport]);
     }
 
-    public BufferDx11<T> NewBuffer<T>(BindFlags bufferType, T[]? data = null, bool isDyamic = false) where T : unmanaged
+    public BufferDx11<T> NewBuffer<T>(BindFlags bufferType, T[]? data = null, uint bufferSize = 0, bool isDynamic = false) where T : unmanaged
     {
-        var buffer = new BufferDx11<T>(Device, bufferType, data, isDyamic);
+        BufferDx11<T> buffer;
+        if (bufferSize != 0)
+        {
+            buffer = new BufferDx11<T>(Device, bufferType, bufferSize);
+            return buffer;
+        }
+        
+        buffer = new BufferDx11<T>(Device, bufferType, data, isDynamic);
         return buffer;
     }
 
@@ -157,6 +161,12 @@ public class Device3D : IDevice3D, IDevice2D
     {
         var texture =  new TextureDx11(Device, textureName);
         return texture;
+    }
+
+    public RenderPipeLineDx11 NewRenderPipeLine()
+    {
+        RenderPipeLineDx11 renderPipeLine = new RenderPipeLineDx11(Device);
+        return renderPipeLine;
     }
 
     public void Clear()

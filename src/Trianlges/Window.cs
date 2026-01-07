@@ -33,7 +33,13 @@ public class Window : IDisposable
     /// </summary>
     public Size Size
     {
-        get => _size;
+        get
+        {
+            Glfw.GetWindowSize(_window, out int width, out int height);
+            _size = new Size(width, height);
+            
+            return _size;
+        } 
         set
         {
             if (Equals(value, Size)) return;

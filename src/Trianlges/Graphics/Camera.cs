@@ -14,7 +14,7 @@ public class Camera
         _fov = fov;
         _pos = pos;
 
-        Updata(_pos, Vector3.Zero, _fov);
+        Update(_pos, Vector3.Zero, _fov);
     }
 
     public int Fov
@@ -25,7 +25,7 @@ public class Camera
             if (Equals(value, _fov)) return;
 
             _fov = value;
-            Updata(_pos, Vector3.Zero, _fov);
+            Update(_pos, Vector3.Zero, _fov);
         }
     }
 
@@ -37,7 +37,7 @@ public class Camera
             if (Equals(value, _pos)) return;
 
             _pos = value;
-            Updata(_pos, Vector3.Zero, _fov);
+            Update(_pos, Vector3.Zero, _fov);
         }
     }
 
@@ -55,9 +55,9 @@ public class Camera
     public Matrix4x4 View { get; private set; }
     public Matrix4x4 Proj { get; private set; }
 
-    public void Updata() => Updata(_pos, Vector3.Zero, _fov);
+    public void Update() => Update(_pos, Vector3.Zero, _fov);
     
-    private void Updata(Vector3 pos, Vector3 at, float fov)
+    private void Update(Vector3 pos, Vector3 at, float fov)
     {
         View = Matrix4x4.CreatePerspectiveFieldOfViewLeftHanded(float.DegreesToRadians(fov), Window.AspectRatio, 1,
             100);

@@ -1,10 +1,11 @@
 using System;
-using System.Numerics;
 using System.Collections.Generic;
-using Trianlges.Renderer.Backend.Direct3D11;
+using System.Numerics;
+using Trianlges.Graphics;
+using Trianlges.Graphics.Direct3D11;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Graphics.Direct3D11;
+namespace Trianlges.Renderer;
 
 public class Renderer : IRenderer
 {
@@ -15,11 +16,10 @@ public class Renderer : IRenderer
     private float _index;
     private readonly Device3D _device;
     private readonly List<DrawElement> _drawElements;
-    private readonly BufferDx11<ConstantBufferData> _cBuffer;
+    private readonly IBuffer<ConstantBufferData> _cBuffer;
     
     public readonly Camera Camera;
     
-
     public Renderer(Device3D device)
     {
         _device = device;
@@ -28,14 +28,14 @@ public class Renderer : IRenderer
         Camera = new Camera(new Vector3(0, 0, -2));
         _constantData = new ConstantBufferData(Camera.View, Camera.Proj);
 
-        _cBuffer = device.NewBuffer<ConstantBufferData>(BindFlags.ConstantBuffer,isDyamic: true);
+        _cBuffer = device.NewBuffer<ConstantBufferData>(BindFlags.ConstantBuffer,isDynamic: true);
 
     }
     
     public void Updata()
     {
         var context = _device.DContext;
-        _cBuffer.Updata(context, [_constantData]);
+        _cBuffer.Update(context, [_constantData]);
     }
 
     private bool _isA;
@@ -43,14 +43,12 @@ public class Renderer : IRenderer
     public void Render()
     {
         _device.Clear();
-
-        // _context.FinishCommandList(false, out var list);
-        // context.ExecuteCommandList(list, true);
         
-        _index += Time.DetalTime * 2.75f;
+        _index += Time.DetalTime * 3f;
 
         foreach (var element in _drawElements)
         {
+            _device.RenderPipeLine.WireFrameEnable = !_isA;
             if (_isA)
             {
                 element.Transform.SetRotation(0, _index, _index);
@@ -65,7 +63,6 @@ public class Renderer : IRenderer
             element.Transform.SetPosition(0, MathF.Sin(-_index), 5);
             
             element.Render(_device);
-            
             _isA = !_isA;
         }
     }

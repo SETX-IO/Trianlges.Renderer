@@ -25,10 +25,9 @@ public abstract class DrawElement
         Material ??= Material.Create(device)
             .SetShader("Assets/Default.hlsl",
                 VertexInputElement.GetVertextElements(VertextType.Position, VertextType.Color3, VertextType.Uv))
-            .ConfigRasterizer(false, true)
             .Build<Material>();
         
-        _cBuffer.Updata(context, [Transform.WorldMat], 1);
+        _cBuffer.Update(context, [Transform.WorldMat], 1);
         
         context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
         

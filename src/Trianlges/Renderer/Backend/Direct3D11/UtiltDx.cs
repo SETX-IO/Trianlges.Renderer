@@ -8,8 +8,21 @@ namespace Trianlges.Renderer.Backend.Direct3D11;
 
 public class UtiltDx
 {
+    #region Texture Loader
+    
     public static IWICImagingFactory WicFactory { get; } = new();
 
+    public static IWICBitmapFrameDecode LoadFrameForFile(string fileName, uint index = 0)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            throw new ArgumentNullException($"{nameof(fileName)} is null or empty.");
+        
+        IWICBitmapDecoder decoder = WicFactory.CreateDecoderFromFileName(fileName);
+        IWICBitmapFrameDecode frameDecode = decoder.GetFrame(index);
+
+        return frameDecode;
+    }
+    
     public static IWICFormatConverter CreateConverterFrame(IWICBitmapFrameDecode frameDecode, Guid srcFormat, out Format dxgiFormat, out bool isCanConvert)
     {
         IWICFormatConverter converter = WicFactory.CreateFormatConverter();
@@ -148,4 +161,8 @@ public class UtiltDx
         Format.R8_UNorm or Format.A8_UNorm => 8,
         _ => throw new ArgumentOutOfRangeException(nameof(dxgiFormat), dxgiFormat, null)
     };
+    
+    #endregion
+    
+    
 }

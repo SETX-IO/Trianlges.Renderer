@@ -5,7 +5,7 @@ using Vortice.D3DCompiler;
 
 namespace Trianlges.Graphics.Direct3D11;
 
-public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
+public class ShaderPrograme : ICompilerShader, IConfigShader, IBuildResource
 {
     private readonly ID3D11Device _refDevice;
     private ReadOnlyMemory<byte> _vertextShaderCode;
@@ -13,14 +13,14 @@ public class ShaderProgame : ICompilerShader, IConfigShader, IBuildResource
     public ID3D11VertexShader? VertexShader { get; protected set; }
     public ID3D11InputLayout? VertexLayout { get; protected set; }
 
-    private ShaderProgame(ID3D11Device device)
+    private ShaderPrograme(ID3D11Device device)
     {
         _refDevice = device;
     }
     
     public static ICompilerShader Create(ID3D11Device device)
     {
-        var instance = new ShaderProgame(device);
+        var instance = new ShaderPrograme(device);
         return instance;
     }
     

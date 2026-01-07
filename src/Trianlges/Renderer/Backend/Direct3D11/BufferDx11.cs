@@ -7,22 +7,25 @@ using Vortice.DXGI;
 
 namespace Trianlges.Renderer.Backend.Direct3D11;
 
-public class BufferDx11<T> where T : unmanaged
+public class BufferDx11<T> : IBuffer<T> where T : unmanaged
 {
     private ID3D11Buffer _buffer;
-    private bool _isDyamic;
+    
+    private bool _isDynamic;
+    private uint _elementSize;
     private BindFlags _bufferType;
 
     private BufferDx11() { throw new NotImplementedException(); }
 
-    public BufferDx11(ID3D11Device device, BindFlags bufferType, T[]? data = null, bool isByamic = false)
+    public BufferDx11(ID3D11Device device, BindFlags bufferType, T[]? data = null, bool isDynamic = false)
     {
-        _isDyamic = isByamic;
+        _isDynamic = isDynamic;
         _bufferType = bufferType;
-        ResourceUsage usage = isByamic ? ResourceUsage.Dynamic : ResourceUsage.Immutable;
-        CpuAccessFlags access = isByamic ? CpuAccessFlags.Write : CpuAccessFlags.None;
+        ResourceUsage usage = isDynamic ? ResourceUsage.Dynamic : ResourceUsage.Immutable;
+        CpuAccessFlags access = isDynamic ? CpuAccessFlags.Write : CpuAccessFlags.None;
 
-        uint bufferSize = data == null ? (uint)Unsafe.SizeOf<T>() : (uint)(data.Length * Unsafe.SizeOf<T>());
+        _elementSize = (uint)Unsafe.SizeOf<T>();
+        uint bufferSize = data == null ? _elementSize : (uint)(data.Length * _elementSize);
         
         BufferDescription desc = new(bufferSize, bufferType, usage, access);
         if (data != null)
@@ -31,13 +34,20 @@ public class BufferDx11<T> where T : unmanaged
             _buffer = device.CreateBuffer(desc, dataStream);
         }
         else
-        {
             _buffer = device.CreateBuffer(desc);
-        }
-
+    }
+    
+    public BufferDx11(ID3D11Device device, BindFlags bufferType, uint bufferSize)
+    {
+        _isDynamic = true;
+        _bufferType = bufferType;
+        _elementSize = (uint)Unsafe.SizeOf<T>();
+        
+        BufferDescription desc = new(_elementSize * bufferSize, bufferType, ResourceUsage.Dynamic, CpuAccessFlags.Write);
+        _buffer = device.CreateBuffer(desc);
     }
 
-    public unsafe void Updata(ID3D11DeviceContext context, T[] data, uint slot = 0, ShaderType type = ShaderType.Vertex)
+    public unsafe void Update(ID3D11DeviceContext context, T[] data, uint slot = 0, ShaderType type = ShaderType.Vertex)
     {
         switch (_bufferType)
         {
@@ -51,7 +61,7 @@ public class BufferDx11<T> where T : unmanaged
                 throw new ArgumentException($"{nameof(_bufferType)} is not buffer Type.");
         }
         
-        if (!_isDyamic)
+        if (!_isDynamic)
             context.UpdateSubresource(data, _buffer);
         
         MappedSubresource map = context.Map(_buffer, MapMode.WriteDiscard);
@@ -67,8 +77,7 @@ public class BufferDx11<T> where T : unmanaged
         {
             case BindFlags.VertexBuffer:
                 const uint offset = 0;
-                uint stride = (uint)Unsafe.SizeOf<T>();
-                context.IASetVertexBuffers(slot, [_buffer], [stride], [offset]);
+                context.IASetVertexBuffers(slot, [_buffer], [_elementSize], [offset]);
             
                 break;
             case BindFlags.IndexBuffer:

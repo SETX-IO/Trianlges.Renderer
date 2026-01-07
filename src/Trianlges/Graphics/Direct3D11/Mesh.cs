@@ -88,7 +88,7 @@ public class Mesh : DrawElement
     {
         _vBuffer = device3d.NewBuffer(BindFlags.VertexBuffer, _vertices);
         _iBuffer = device3d.NewBuffer(BindFlags.IndexBuffer, _indiecs);
-        _cBuffer = device3d.NewBuffer<Matrix4x4>(BindFlags.ConstantBuffer, isDyamic: true);
+        _cBuffer = device3d.NewBuffer<Matrix4x4>(BindFlags.ConstantBuffer, isDynamic: true);
         
         IsInit = !IsInit;
     }
