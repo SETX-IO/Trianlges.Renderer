@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Vortice.D3DCompiler;
 using Vortice.DXGI;
 using Vortice.Mathematics;
 using Vortice.WIC;
@@ -163,6 +164,53 @@ public class UtiltDx
     };
     
     #endregion
-    
-    
+
+    #region ShaderComplier
+
+    public static ReadOnlyMemory<byte> CompilerShader(string shaderPath, string entryPoint, ShaderType type, ShaderVersion version = ShaderVersion.V5)
+    {
+        string shaderType = type switch
+        {
+            ShaderType.Vertex => "vs",
+            ShaderType.Hull => "ps",
+            ShaderType.Domain => "ds",
+            ShaderType.Geometry => "gs",
+            ShaderType.Pixel => "ps",
+            ShaderType.Compute => "cs",
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+        string profile = $"{shaderType}_{(int)version}_0";
+        
+        ReadOnlyMemory<byte> shaderCode;
+
+#if DEBUG
+        shaderCode = Compiler.CompileFromFile(shaderPath, entryPoint, profile);
+#else
+
+        string path;
+        var cacheFile = $"{entryPoint}_{Path.GetFileNameWithoutExtension(shaderPath)}.psv";
+        
+        try
+        {
+            path = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(shaderPath)), cacheFile);
+        }
+        catch (Exception e) when(e is ArgumentException or ArgumentException)
+        {
+            Console.WriteLine(e);
+            path = cacheFile;
+        }
+
+        if (!File.Exists(path))
+        {
+            shaderCode = Compiler.CompileFromFile(shaderPath, entryPoint, profile);
+            using var stream = File.Create(path);
+
+            stream.Write(shaderCode.Span);
+        }
+        else shaderCode = File.ReadAllBytes(path);
+#endif
+        return shaderCode;
+    }
+
+    #endregion
 }

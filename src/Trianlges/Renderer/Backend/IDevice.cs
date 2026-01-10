@@ -1,4 +1,4 @@
-namespace Trianlges.Renderer;
+namespace Trianlges.Renderer.Backend;
 
 public interface IDevice
 {

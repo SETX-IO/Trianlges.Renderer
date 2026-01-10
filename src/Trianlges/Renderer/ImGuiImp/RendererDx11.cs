@@ -1,6 +1,5 @@
 using System.Numerics;
 using Hexa.NET.ImGui;
-using Trianlges.Graphics.Direct3D11;
 using System.Runtime.InteropServices;
 using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D11;
@@ -9,7 +8,7 @@ namespace Trianlges.Renderer.ImGuiImp;
 
 public class RendererDx11
 {
-    private readonly Device3D _device;
+    private readonly DeviceDx11 _device;
     private BufferDx11<ImDrawVert>? _vBuffer;
     private BufferDx11<ushort>? _iBuffer;
     private BufferDx11<Matrix4x4>? _cBuffer;
@@ -17,7 +16,7 @@ public class RendererDx11
     private int _vertexCount;
     private int _indexCount;
     
-    public RendererDx11(Device3D device)
+    public RendererDx11(DeviceDx11 device)
     {
         _device = device;
         

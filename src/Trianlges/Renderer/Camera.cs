@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using Vortice.Mathematics;
 
-namespace Trianlges.Graphics;
+namespace Trianlges.Renderer;
 
 public class Camera
 {

@@ -15,8 +15,6 @@ public class BufferDx11<T> : IBuffer<T> where T : unmanaged
     private uint _elementSize;
     private BindFlags _bufferType;
 
-    private BufferDx11() { throw new NotImplementedException(); }
-
     public BufferDx11(ID3D11Device device, BindFlags bufferType, T[]? data = null, bool isDynamic = false)
     {
         _isDynamic = isDynamic;
@@ -96,7 +94,7 @@ public class BufferDx11<T> : IBuffer<T> where T : unmanaged
             case ShaderType.Vertex:
                 context.VSSetConstantBuffer(slot, _buffer);
                 break;
-            case ShaderType.Hell:
+            case ShaderType.Hull:
                 context.HSSetConstantBuffer(slot, _buffer);
                 break;
             case ShaderType.Domain:

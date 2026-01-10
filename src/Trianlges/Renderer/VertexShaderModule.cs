@@ -5,14 +5,17 @@ using System.Runtime.CompilerServices;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
-namespace Trianlges.Graphics;
+namespace Trianlges.Renderer;
 
 public struct Vertex
 {
+    public static readonly InputElementDescription[] VertexInputLayout =
+        VertexInputElement.GetVertextElements(VertexType.Position, VertexType.Color3, VertexType.Uv);
+    
     public Vector3 Position;
     public Vector3 Color;
     public Vector2 Uv;
-
+    
     public Vertex(Vector3 position, Vector2 uv)
     {
         Position = position;
@@ -45,7 +48,7 @@ public struct ConstantBufferData(Matrix4x4 view, Matrix4x4 proj)
     public static readonly uint Size = (uint)Unsafe.SizeOf<ConstantBufferData>();
 }
 
-public enum VertextType
+public enum VertexType
 {
     Position,
     Position2,
@@ -59,16 +62,16 @@ public struct VertexInputElement
 {
     private static uint _offset;
     
-    public static InputElementDescription[] GetVertextElements(params VertextType[] elements)
+    public static InputElementDescription[] GetVertextElements(params VertexType[] elements)
     {
         var descs = elements.Select(element => element switch
         {
-            VertextType.Position => Position,
-            VertextType.Position2 => Position2,
-            VertextType.Color3 => Color3,
-            VertextType.Color4 => Color4,
-            VertextType.Uv => Uv,
-            VertextType.Normal => Normal,
+            VertexType.Position => Position,
+            VertexType.Position2 => Position2,
+            VertexType.Color3 => Color3,
+            VertexType.Color4 => Color4,
+            VertexType.Uv => Uv,
+            VertexType.Normal => Normal,
             _ => throw new ArgumentOutOfRangeException()
         });
         _offset = 0;

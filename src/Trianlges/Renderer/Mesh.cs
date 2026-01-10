@@ -1,7 +1,8 @@
 ﻿using System.Numerics;
+using Trianlges.Renderer.Backend.Direct3D11;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Graphics.Direct3D11;
+namespace Trianlges.Renderer;
 
 public class Mesh : DrawElement
 {
@@ -84,7 +85,7 @@ public class Mesh : DrawElement
         IndexCount = (uint)indiecs.Length;
     }
 
-    private void CreateRenderResouces(Device3D device3d)
+    private void CreateRenderResouces(DeviceDx11 device3d)
     {
         _vBuffer = device3d.NewBuffer(BindFlags.VertexBuffer, _vertices);
         _iBuffer = device3d.NewBuffer(BindFlags.IndexBuffer, _indiecs);
@@ -93,7 +94,7 @@ public class Mesh : DrawElement
         IsInit = !IsInit;
     }
 
-    public override void Render(Device3D device)
+    public override void Render(DeviceDx11 device)
     {
         if (!IsInit)
         {

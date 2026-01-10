@@ -1,20 +1,22 @@
-using Trianlges.Graphics.Direct3D11;
+using Trianlges.Renderer.Type;
+using Vortice.Direct3D;
 using Vortice.Direct3D11;
 
 namespace Trianlges.Renderer.Backend.Direct3D11;
 
 public class RenderPipeLineDx11
 {
-    private ShaderPrograme _programe = null!;
+    private readonly ProgramDx11 programe = null!;
     
-    public readonly ID3D11SamplerState SamplerState;
+    protected readonly ID3D11SamplerState SamplerState;
     
-    public readonly ID3D11RasterizerState RasterizerState;
-    public readonly ID3D11RasterizerState WireFrameRasterizerState;
+    protected readonly ID3D11RasterizerState RasterizerState;
+    protected readonly ID3D11RasterizerState WireFrameRasterizerState;
     
-    public readonly ID3D11BlendState BlendState;
-    public readonly ID3D11BlendState AlphaBlendState;
+    protected readonly ID3D11BlendState BlendState;
+    protected readonly ID3D11BlendState AlphaBlendState;
 
+    public IProgram Program => programe;
     public bool WireFrameEnable { get; set; }
     public bool BlendEnable { get; set; }
 
@@ -49,20 +51,25 @@ public class RenderPipeLineDx11
         SamplerState = device.CreateSamplerState(samDesc);
     }
 
-    public void UpDate()
+    public void UpDate(PipeLineDescriptor pipeLineDescriptor)
     {
-        
-        UpDateBlendState();
+        UpDateBlendState(pipeLineDescriptor.BlendOptions);
     }
     
     public void Bind(ID3D11DeviceContext context)
     {
+        context.IASetPrimitiveTopology(PrimitiveTopology.TriangleList);
+        
         context.RSSetState(WireFrameEnable ? WireFrameRasterizerState : RasterizerState);
         context.OMSetBlendState(BlendEnable ? AlphaBlendState : BlendState);
         context.PSSetSamplers(0, [SamplerState]);
     }
 
-    private void UpDateBlendState()
+    private void UpDateBlendState(BlendOptions options)
     {
+        if (options.BlendEnable)
+        {
+            
+        }
     }
 }

@@ -1,7 +1,6 @@
-using Trianlges.Renderer.Backend;
 using Vortice.Direct3D11;
 
-namespace Trianlges.Renderer;
+namespace Trianlges.Renderer.Backend;
 
 public interface IBuffer<in T> where T : unmanaged
 {
