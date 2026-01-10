@@ -1,4 +1,4 @@
-﻿using Trianlges;
+﻿using Triangles;
 
 namespace Trianlges.SandBox;
 

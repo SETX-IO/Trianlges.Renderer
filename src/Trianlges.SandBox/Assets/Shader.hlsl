@@ -31,7 +31,7 @@ Varyings vert(Attributes In)
     Out.position = mul(Out.position, module);
     Out.position = mul(Out.position, viewProj);
 
-    Out.color = float4(In.color, 1.0f);
+    Out.color = float4(In.color, 0.5f);
 
     return Out;
 }

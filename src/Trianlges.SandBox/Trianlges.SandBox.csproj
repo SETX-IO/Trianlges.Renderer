@@ -11,13 +11,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Trianlges\Trianlges.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
         <None Update="Assets\*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Triangles\Triangles.csproj" />
     </ItemGroup>
 
 </Project>
