@@ -8,6 +8,8 @@
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
         <InvariantGlobalization>true</InvariantGlobalization>
+        <IsPackable>false</IsPackable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,7 +19,17 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Triangles.BaseApp\Triangles.BaseApp.csproj" />
+      <ProjectReference Include="..\..\Triangles.Core\Triangles.Core.csproj" />
       <ProjectReference Include="..\Triangles\Triangles.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Vortice.Dxc" Version="3.8.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ClCompile Include="Assets\Triangle.hlsl" />
     </ItemGroup>
 
 </Project>

@@ -42,8 +42,6 @@ public class Renderer
 
     public void Render()
     {
-        _device.Clear();
-        
         _index += Time.DetalTime * 3f;
         
         foreach (var element in _drawElements)

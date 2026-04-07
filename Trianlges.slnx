@@ -1,4 +1,6 @@
 <Solution>
     <Project Path="src/Triangles/Triangles.csproj" />
     <Project Path="src/Trianlges.SandBox/Trianlges.SandBox.csproj" />
+    <Project Path="Triangles.BaseApp/Triangles.BaseApp.csproj" />
+    <Project Path="Triangles.Core/Triangles.Core.csproj" />
 </Solution>

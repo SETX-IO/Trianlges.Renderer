@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using SharpGen.Runtime;
 using Vortice.D3DCompiler;
 using Vortice.DXGI;
 using Vortice.Mathematics;
@@ -9,6 +10,10 @@ namespace Triangles.Renderer.Backend.Direct3D11;
 
 public class UtiltDx
 {
+    private static readonly IDXGIFactory1 DxgiFactory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
+    public static T GetDxgiIFactory<T>() where T : IDXGIFactory1
+        => DxgiFactory.As<T>();
+    
     #region Texture Loader
     
     public static IWICImagingFactory WicFactory { get; } = new();

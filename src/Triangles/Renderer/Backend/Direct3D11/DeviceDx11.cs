@@ -13,10 +13,6 @@ namespace Triangles.Renderer.Backend.Direct3D11;
 /// </summary>
 public class DeviceDx11
 {
-    private readonly IDXGIFactory1 _factory;
-    private Viewport _viewport;
-    private ID3D11Texture2D _depthStencil;
-
     /// <summary>
     ///     Default constructors.
     /// </summary>
@@ -28,28 +24,27 @@ public class DeviceDx11
     /// </code>
     public DeviceDx11()
     {
-        Result result = Result.Ok;
+        Result result;
         
         var createFlags = DeviceCreationFlags.BgraSupport;
         
 #if DEBUG
         createFlags |= DeviceCreationFlags.Debug;
 #endif
-        DXGI.CreateDXGIFactory1<IDXGIFactory6>(out var factory);
-        factory!.EnumAdapterByGpuPreference(0, GpuPreference.HighPerformance, out IDXGIAdapter? adapter);
-
-        _factory = factory;
+        IDXGIFactory6 factory = UtiltDx.GetDxgiIFactory<IDXGIFactory6>();
+        factory.EnumAdapterByGpuPreference(0, GpuPreference.HighPerformance, out IDXGIAdapter? adapter);
         
         result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out var device, out _, out var context);
 
         try
         {
             if (!result.Success)
-                throw new COMException();
+                throw new COMException("[Warning] You can't enable debug layer because you haver't installed the DirectX debugger Tools.");
         }
-        catch (COMException)
+        catch (COMException e)
         {
-            Console.WriteLine("[Warning] You can't enable debug layer because you haver't installed the DirectX debugger Tools.");
+            Console.WriteLine(e.Message);
+            
             createFlags ^= DeviceCreationFlags.Debug;
             
             result = D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, createFlags, [], out device, out _, out context);
@@ -59,22 +54,10 @@ public class DeviceDx11
         Device = device;
         DContext = context;
 
+        CommandPool.Init(Device);
+        
         RenderPipeLine = new RenderPipeLineDx11(device);
-    }
-
-    /// <summary>
-    ///     Create constructors.
-    /// </summary>
-    /// <code>
-    /// // You or use Code.
-    /// // windowHandler is win32 HWND.
-    /// DeviceDx11 device = new DeviceDx11();
-    /// device.CreateWindowResource(windowHandler)
-    /// </code>
-    /// <param name="windowHandler">Win32 HWND</param>
-    public DeviceDx11(IntPtr windowHandler) : this()
-    {
-        CreateWindowResource(windowHandler);
+        Command = Device.CreateDeferredContext();
     }
 
     public ID3D11Device Device { get; }
@@ -82,63 +65,6 @@ public class DeviceDx11
     public ID3D11DeviceContext Command;
 
     public RenderPipeLineDx11 RenderPipeLine { get; protected set; }
-
-    public IDXGISwapChain SwapChain { get; private set; } = null!;
-    public ID3D11RenderTargetView? RenderTarget { get; private set; }
-    public ID3D11DepthStencilView? DepthStencil { get; private set; }
-
-    public void CreateWindowResource(IntPtr windowHandler)
-    {
-        var swDesc = new SwapChainDescription
-        {
-            BufferCount = 1,
-            BufferDescription = new ModeDescription
-            {
-                Format = Format.B8G8R8A8_UNorm
-            },
-            BufferUsage = Usage.RenderTargetOutput,
-            OutputWindow = windowHandler,
-            SampleDescription = new SampleDescription(1, 0),
-            Windowed = true
-        };
-        
-        SwapChain = _factory.CreateSwapChain(Device, swDesc);
-
-        Command = Device.CreateDeferredContext();
-        
-        ConfigRenderTarget();
-    }
-    
-    public void ResetSize(uint width, uint height)
-    {
-        if (width == 0 || height == 0) return;
-        
-        var res = SwapChain.ResizeBuffers(1, width, height, Format.B8G8R8A8_UNorm);
-        
-        if (!res.Success)
-            return;
-        
-        RenderTarget?.Release();
-        DepthStencil?.Release();
-        
-        ConfigRenderTarget();
-    }
-
-    public void ConfigRenderTarget()
-    {
-        ID3D11Texture2D backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
-        RenderTarget = Device.CreateRenderTargetView(backBuffer);
-        
-        Texture2DDescription bbDesc = backBuffer.Description;
-        
-        Texture2DDescription depthDesc = new(Format.D24_UNorm_S8_UInt, bbDesc.Width, bbDesc.Height, 1, 1, BindFlags.DepthStencil);
-        _depthStencil = Device.CreateTexture2D(depthDesc);
-        
-        var depthViewDesc = new DepthStencilViewDescription(DepthStencilViewDimension.Texture2D);
-        DepthStencil = Device.CreateDepthStencilView(_depthStencil, depthViewDesc);
-
-        _viewport = new Viewport(bbDesc.Width, bbDesc.Height);
-    }
 
     public BufferDx11<T> NewBuffer<T>(BindFlags bufferType, T[]? data = null, uint bufferSize = 0) where T : unmanaged
     {
@@ -171,22 +97,18 @@ public class DeviceDx11
         return program;
     }
     
-    public void Clear()
+    public void SubmitCommandBuffer(ID3D11DeviceContext context)
     {
-        RenderPipeLine.BlendEnable = true;
+        if (context.ContextType != DeviceContextType.Deferred)
+            throw new ArgumentException($"{nameof(context)} not is deferred context.");
         
-        Command.RSSetViewports([_viewport]);
-        Command.OMSetRenderTargets([RenderTarget], DepthStencil);
-        
-        Command.ClearRenderTargetView(RenderTarget, Camera.ClearColor);
-        Command.ClearDepthStencilView(DepthStencil, DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil, 1f, 0);
-    }
+        context.FinishCommandList(false, out var commandList);
+        DContext.ExecuteCommandList(commandList, true);
+    } 
     
-    public void Present()
+    public void Submit()
     {
         Command.FinishCommandList(false, out var list);
         DContext.ExecuteCommandList(list, true);
-        
-        SwapChain.Present(0, PresentFlags.None);
     } 
 }

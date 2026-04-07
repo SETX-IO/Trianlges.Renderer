@@ -47,7 +47,7 @@ public class Camera
         set
         {
             if (Equals(value, _clearColor)) return;
-
+    
             _clearColor = value;
         }
     }

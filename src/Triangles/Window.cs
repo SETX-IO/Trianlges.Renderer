@@ -5,6 +5,16 @@ using GLFW;
 
 namespace Triangles;
 
+public enum VideoType
+{
+    OpenGl,
+    OpenGLes,
+    Vulkan,
+    DirectX9,
+    DirectX11,
+    DirectX12,
+}
+
 public class Window : IDisposable
 {
     public static float AspectRatio;
@@ -12,10 +22,7 @@ public class Window : IDisposable
     private Size _size;
     private string _title;
     [SupportedOSPlatform("Windows")] private IntPtr _win32Handler;
-    
-    /// <summary>
-    ///     Window's title.
-    /// </summary>
+
     public string Title
     {
         get => _title;
@@ -27,10 +34,7 @@ public class Window : IDisposable
             Glfw.SetWindowTitle(_window, value);
         }
     }
-
-    /// <summary>
-    ///     Window's size.
-    /// </summary>
+    
     public Size Size
     {
         get
@@ -51,10 +55,7 @@ public class Window : IDisposable
     }
 
     public bool IsClose => Glfw.WindowShouldClose(_window);
-
-    /// <summary>
-    ///     Window's HWND.
-    /// </summary>
+    
     [SupportedOSPlatform("Windows")]
     public IntPtr Win32Handler
     {
@@ -84,19 +85,14 @@ public class Window : IDisposable
         }
     }
         
-    /// <summary>
-    ///     Create Window.
-    /// </summary>
-    /// <param name="width">width</param>
-    /// <param name="height">height</param>
-    /// <param name="title">title</param>
-    public Window(int width, int height, string title)
-    {
 
-        Glfw.Init();
-        _window = Glfw.CreateWindow(width, height, title, default, default);
-        _title = title;
+    public Window(int width, int height, string? title)
+    {
+        _title = title ?? "Glfw Window";
         _size = new Size(width, height);
+        
+        _window = Glfw.CreateWindow(width, height, title, default, default);
+        
         AspectRatio = (float)width / height;
     }
     

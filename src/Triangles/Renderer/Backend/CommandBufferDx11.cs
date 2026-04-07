@@ -11,6 +11,12 @@ public class CommandBufferDx11
     public ID3D11DepthStencilView? DepthStencil;
     
     public IProgram Program;
+
+    public CommandBufferDx11(ID3D11DeviceContext context)
+    {
+        Context = context;
+        context.AddRef();
+    }
     
     public void SetViewPort(Viewport viewport)
     {
@@ -47,5 +53,10 @@ public class CommandBufferDx11
     {
         Program = program;
         Program.Bind(Context);
+    }
+
+    public void Release()
+    {
+        Context.Release();
     }
 }
