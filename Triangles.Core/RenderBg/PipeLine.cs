@@ -1,14 +1,15 @@
+using Triangles.Core.Renderer;
 using Vortice.D3DCompiler;
 using Vortice.Direct3D12;
 using Vortice.DXGI;
 
 namespace Triangles.Core.RenderBg;
 
-public class PipeLine
+public class PipeLine : IPipeLine
 {
     private CachedPipelineState PipeLineCache;
     
-    private Device _device;
+    private readonly Device _device;
     private readonly GraphicsPipelineStateDescription _pipeLineInfo;
     
     public ID3D12PipelineState PipelineState;
@@ -52,16 +53,24 @@ public class PipeLine
         
         string shader =
             """
+            cbuffer ViewProj : register(b0)
+            {
+                matrix SRPMatrix;
+            }
+            
+            Texture2D g_texture : register(t0);
+            SamplerState g_sampler : register(s0);
+            
             struct Attributes
             {
                 float3 position : POSITION;
-                float3 color : COLOR0;
+                float2 uv : TEXCOORD;
             };
 
             struct Varyings
             {
                 float4 position : SV_POSITION;
-                float4 color : COLOR0;
+                float2 uv : TEXCOORD;
             };
 
             Varyings vert(Attributes In)
@@ -69,14 +78,16 @@ public class PipeLine
                 Varyings Out;
                 
                 Out.position = float4(In.position, 1.0f);
-                Out.color = float4(In.color, 1.0f);
+                Out.position = mul(Out.position, SRPMatrix);
+                
+                Out.uv = In.uv;
 
                 return Out;
             }
 
             float4 frag(Varyings In) : SV_Target
             {
-                return In.color;
+                return g_texture.Sample(g_sampler, In.uv);
             }            
             """;
 
@@ -86,7 +97,7 @@ public class PipeLine
         InputElementDescription[] inputs =
         [
             new("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-            new("COLOR", 0, Format.R32G32B32_Float, 12, 0),
+            new("TEXCOORD", 0, Format.R32G32_Float, 12, 0),
         ];
 
         _pipeLineInfo = new GraphicsPipelineStateDescription
@@ -99,7 +110,7 @@ public class PipeLine
             RasterizerState = RasterizerDescription.CullCounterClockwise,
             BlendState = BlendDescription.Opaque,
             DepthStencilState = DepthStencilDescription.Default,
-            RenderTargetFormats = [Format.B8G8R8A8_UNorm],
+            RenderTargetFormats = [Format.R8G8B8A8_UNorm],
             DepthStencilFormat = Format.Unknown,
             SampleDescription = SampleDescription.Default,
         };
@@ -125,5 +136,10 @@ public class PipeLine
         commandBuffer.CommandList.SetPipelineState(PipelineState);
         
         commandBuffer.CommandList.SetGraphicsRootSignature(_pipeLineInfo.RootSignature);
+    }
+
+    public void Dispose()
+    {
+        PipelineState.Dispose();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using SharpGen.Runtime;
+using Triangles.Core.Renderer;
 using Vortice.Direct3D;
 using Vortice.Direct3D12;
 using Vortice.DXGI;
@@ -14,7 +15,8 @@ public partial class Device
         public ID3D12CommandQueue CommandQueue { get; }
         public uint RtvDescriptorSize => _device.GetDescriptorHandleIncrementSize(DescriptorHeapType.RenderTargetView);
         public ID3D12Device LDevice => _device;
-        public ID3D12RootSignature RootSignature { get; }
+        public ID3D12RootSignature RootSignature { get; protected set; } = null!;
+        public DescriptionHeapPool DescriptionHeapPool;
 
         public unsafe Device()
         {
@@ -32,7 +34,7 @@ public partial class Device
                     break;
                 }
 
-                adapter.Release();
+                adapter.Dispose();
             }
 
             FeatureLevel[] featureLevels = 
@@ -57,22 +59,28 @@ public partial class Device
             device?.CheckFeatureSupport(Feature.FeatureLevels, ref featureInfo);
 
             _device = D3D12.D3D12CreateDevice<ID3D12Device>(miniAdapter, featureInfo.MaxSupportedFeatureLevel);
-
             _device.Name = "Triangles Render Device(Dx12)";
 
             CommandQueue = _device.CreateCommandQueue<ID3D12CommandQueue>(CommandListType.Direct);
             CommandQueue.Name = "Triangles Graphics Queue(Dx12)";
 
-
-            RootSignatureDescription1 signatureInfo = new (RootSignatureFlags.AllowInputAssemblerInputLayout);
-            RootSignature = _device.CreateRootSignature(signatureInfo);
+            DescriptionHeapPool = new DescriptionHeapPool(this);
+            
+            miniAdapter.Dispose();
         }
 
-        public void ExecuteCommandBuffer(CommandBuffer cmd)
+        public void ExecuteCommandBuffer(ICommandBuffer cmd)
         {
-            cmd.CommandList.EndEvent();
+            cmd.CmdBuffer.CommandList.EndEvent();
             
-            cmd.CommandList.Close();
-            CommandQueue.ExecuteCommandList(cmd.CommandList);
+            cmd.CloseCmd();
+            CommandQueue.ExecuteCommandList(cmd.CmdBuffer.CommandList);
+        }
+        
+        public void Dispose()
+        {
+            _device.Dispose();
+            CommandQueue.Dispose();
+            RootSignature.Dispose();
         }
     }

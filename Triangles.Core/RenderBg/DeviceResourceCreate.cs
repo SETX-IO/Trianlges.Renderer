@@ -1,33 +1,34 @@
+using Triangles.Core.Renderer;
 using Vortice.Direct3D12;
 
 namespace Triangles.Core.RenderBg;
 
-public partial class Device
+public partial class Device : IDevice
 {
-    public (ReadOnlyMemory<ID3D12Resource> resources, ID3D12DescriptorHeap heap) CreateRenderTargetViews(uint bufferCount, Func<int, ID3D12Resource> backBufferCallBack)
+    private readonly List<RootParameter1> _rootSignatureParameters = new();
+    private readonly List<StaticSamplerDescription> _samplerDescriptions = new();
+    
+    public ReadOnlyMemory<RenderTargetTexture> CreateRenderTargetViews(uint bufferCount, Func<int, ID3D12Resource> backBufferCallBack)
     {
             
-        ID3D12Resource[] resources = new ID3D12Resource[bufferCount];
+        RenderTargetTexture[] resources = new RenderTargetTexture[bufferCount];
 
         uint rtvDescSize = RtvDescriptorSize;
-            
-        DescriptorHeapDescription desc = new DescriptorHeapDescription(DescriptorHeapType.RenderTargetView, bufferCount);
-        ID3D12DescriptorHeap heap = _device.CreateDescriptorHeap<ID3D12DescriptorHeap>(desc);
-
-        CpuDescriptorHandle rtvHandel = heap.GetCPUDescriptorHandleForHeapStart();
+        
+        DescriptionHeap heap = DescriptionHeapPool.GetHeap(DescriptionHeapType.Rtv);
+        CpuDescriptorHandle rtvHandel = heap.CpuHandle;
 
         for (int i = 0; i < resources.Length; i++)
         {
             ID3D12Resource backBuffer = backBufferCallBack(i);
                 
             _device.CreateRenderTargetView(backBuffer, null, rtvHandel);
-            resources[i] = backBuffer;
+            resources[i] = new RenderTargetTexture(backBuffer, rtvHandel, this);
 
             rtvHandel.Offset(1, rtvDescSize);
-            // rtvHandel.Ptr += rtvDescSize;
         }
             
-        return (resources, heap);
+        return resources;
     }
 
     public ID3D12Fence CreateFence(ulong initialValue = 0UL, FenceFlags flags = FenceFlags.None)
@@ -42,5 +43,34 @@ public partial class Device
     {
         CommandBufferPool pool = new CommandBufferPool(_device, allocationCount);
         return pool;
+    }
+
+    public Device AddRootSignatureParameter(ShaderVisibility shaderVisibility, DescriptorRangeType type, uint registerSlot)
+    {
+        DescriptorRange1 tableRange = new DescriptorRange1(type, 1, registerSlot);
+        RootParameter1 parameter = new RootParameter1(new RootDescriptorTable1(tableRange), shaderVisibility);
+        
+        _rootSignatureParameters.Add(parameter);
+
+        return this;
+    }
+
+    public Device AddSamplerDesc()
+    {
+        StaticSamplerDescription samplerInfo = new StaticSamplerDescription(0)
+        {
+            ShaderVisibility = ShaderVisibility.Pixel
+        };
+
+        _samplerDescriptions.Add(samplerInfo);
+        
+        return this;
+    }
+
+    public void SerializedRootSignature(RootSignatureFlags signatureFlags = RootSignatureFlags.AllowInputAssemblerInputLayout)
+    {
+        RootSignatureDescription1 signatureInfo = new(signatureFlags, _rootSignatureParameters.ToArray(), _samplerDescriptions.ToArray());
+        
+        RootSignature = _device.CreateRootSignature(signatureInfo);
     }
 }

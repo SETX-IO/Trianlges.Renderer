@@ -18,7 +18,7 @@ public class Dxgi
     {
 #if DEBUG
         D3D12.D3D12GetDebugInterface<ID3D12Debug3>(out var dxDebug);
-        dxDebug.EnableDebugLayer();
+        dxDebug!.EnableDebugLayer();
         dxDebug.SetEnableGPUBasedValidation(true);
         dxDebug.Dispose();
 #endif

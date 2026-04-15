@@ -4,9 +4,9 @@ namespace Triangles.Core.RenderBg;
 
 public class Fence
 {
-    private ID3D12CommandQueue _queue;
-    private AutoResetEvent _event;
-    private ID3D12Fence _fence;
+    private readonly ID3D12CommandQueue _queue;
+    private readonly AutoResetEvent _event;
+    private readonly ID3D12Fence _fence;
 
     private uint _frameCount;
     private uint _frameBufferCount;

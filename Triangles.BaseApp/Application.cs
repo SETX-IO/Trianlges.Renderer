@@ -16,22 +16,20 @@ public class Application(AppConfig config)
     {
         bool isMinimized = false;
         
-        Stopwatch Stopwatch = Stopwatch.StartNew();
-        TimeSpan _lastFrameTime = TimeSpan.Zero;
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        TimeSpan lastFrameTime = TimeSpan.Zero;
         
         MainWindow.Show();
         MainWindow.SizeChange += (window, size) => isMinimized = size.IsEmpty;
 
         while (MainWindow.IsOpen)
         {
-            var now = Stopwatch.Elapsed;
-            var delta = now - _lastFrameTime;
-            _lastFrameTime = now;
+            var now = stopwatch.Elapsed;
+            var delta = now - lastFrameTime;
+            lastFrameTime = now;
             
             if (!isMinimized)
             {
-
-                
                 Renderer?.Invoke((float)delta.TotalSeconds);
             }
             

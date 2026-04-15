@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Triangles.Core.Renderer;
 using Vortice.Direct3D12;
 
 namespace Triangles.Core.RenderBg;
@@ -27,7 +28,7 @@ public class CommandBufferPool
 
     private uint frameCount;
     
-    public CommandBuffer Get(string commandBufferName = "")
+    public ICommandBuffer Get(string commandBufferName = "")
     {
         if (_cmdListsCache.TryGetValue(commandBufferName, out var cmd))
         {
@@ -50,8 +51,15 @@ public class CommandBufferPool
         return _cmdListsCache[commandBufferName];
     }
 
-    public void Release(CommandBuffer cmd)
+    public void Release(ICommandBuffer cmd)
     {
-        cmd.Release();
+        
+    }
+
+    public void DisposeCmdBuffer(ICommandBuffer cmd)
+    {
+        var commandBuffer = (CommandBuffer)cmd;
+        
+        commandBuffer.CommandList.Dispose();
     }
 }
